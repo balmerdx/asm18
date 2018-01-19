@@ -1,0 +1,11 @@
+r0 = 0x23
+r1 = 0x16
+r1 = r0 + 3
+r1 = r1 - 0x26
+//ip = 22
+//CustomLabel:
+//CustomIdentifier
+//ip = 22
+//r3 = 0x20
+//020
+//0b100000000	 
