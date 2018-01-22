@@ -38,8 +38,8 @@ bool AsmMaker::isValidReg(int reg)
 bool AsmMaker::writeToTextFile(std::string filename)
 {
 	std::ofstream file;
-	file.open(filename.c_str());
-	if (!file)
+	file.open(filename.c_str(), std::ofstream::out | std::ofstream::trunc);
+	if (!file.is_open())
 	{
 		std::cerr << "Cannot open file '" << filename << "'" << std::endl;
 		return false;
@@ -78,7 +78,7 @@ void AsmMaker::addAddRegImm8(int rx, int ry, int imm8)
 	assert(isValidReg(ry));
 	assert(isValidImm8(imm8));
 
-	uint32_t op = (0x4 << BITS_TOP) | (rx << BITS_OP0) | (ry << BITS_OP1) | ((uint32_t)imm8 & 0xFF);
+	uint32_t op = (0x0 << BITS_TOP) | (rx << BITS_OP0) | (ry << BITS_OP1) | ((uint32_t)imm8 & 0xFF);
 	commands.push_back(op);
 }
 
