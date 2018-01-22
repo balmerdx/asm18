@@ -115,16 +115,6 @@ void AsmMaker::addMovImm18(int reg, int number)
 	addAddRegImm8(reg, reg, bottom);
 }
 
-void AsmMaker::addMovIndirect(int rx, int ry, int imm8)
-{
-	assert(isValidReg(rx));
-	assert(isValidReg(ry));
-	assert(isValidImm8(imm8));
-
-	uint32_t op = (0x2 << BITS_TOP) | (rx << BITS_OP0) | (ry << BITS_OP1) | ((uint32_t)imm8 & 0xFF);
-	commands.push_back(op);
-}
-
 void AsmMaker::addAddRegImm8(int rx, int ry, int imm8)
 {
 	assert(isValidReg(rx));
@@ -132,6 +122,16 @@ void AsmMaker::addAddRegImm8(int rx, int ry, int imm8)
 	assert(isValidImm8(imm8));
 
 	uint32_t op = (0x0 << BITS_TOP) | (rx << BITS_OP0) | (ry << BITS_OP1) | ((uint32_t)imm8 & 0xFF);
+	commands.push_back(op);
+}
+
+void AsmMaker::addLoadFromMemory(int rx, int ry, int imm8)
+{
+	assert(isValidReg(rx));
+	assert(isValidReg(ry));
+	assert(isValidImm8(imm8));
+
+	uint32_t op = (0x3 << BITS_TOP) | (rx << BITS_OP0) | (ry << BITS_OP1) | ((uint32_t)imm8 & 0xFF);
 	commands.push_back(op);
 }
 

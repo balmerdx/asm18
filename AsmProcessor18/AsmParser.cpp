@@ -480,7 +480,7 @@ void AsmParser::processLine(std::vector<Token>& tokens)
 		const Token& t1 = tokens[i+1];
 		Token& t2 = tokens[i+2];
 
-		if (t0.type == TokenType::Operator &&
+		if ((t0.type == TokenType::Operator || t0.type == TokenType::Brackets) &&
 			t1.type == TokenType::Operator && t1.op == OperatorType::Minus &&
 			t2.type == TokenType::Number
 			)
@@ -504,13 +504,16 @@ void AsmParser::processLine(std::vector<Token>& tokens)
 	{
 		int rX = tokens[0].register_index;
 
-		if (2>=tokens.size())
-			errorRequiredOperand(tokens, 2);
+		size_t cur_token = 2;
+		if (cur_token >= tokens.size())
+			errorRequiredOperand(tokens, cur_token);
 
-		if (tokens[2].type == TokenType::Number)
+		if (tokens[cur_token].type == TokenType::Number)
 		{
 			// rX = imm18
-			int imm18 = tokens[2].number;
+			int imm18 = tokens[cur_token].number;
+			cur_token++;
+
 			if (!code.isValidImm18(imm18))
 				error("Immediate out of range [-131072, 131071]", tokens[2].line_offset);
 			if(tokens.size() > 3)
@@ -520,32 +523,59 @@ void AsmParser::processLine(std::vector<Token>& tokens)
 			return;
 		}
 
-		if (tokens[2].type == TokenType::Register)
+		if (tokens[cur_token].type == TokenType::Register)
 		{
-			int rY = tokens[2].register_index;
+			int rY = tokens[cur_token].register_index;
+			cur_token++;
 
-			if(tokens.size() >= 4 &&
-				(tokens[3].isOperator(OperatorType::Plus) ||
-				tokens[3].isOperator(OperatorType::Minus)
-			    ))
+			if (cur_token < tokens.size() &&
+				(tokens[cur_token].isOperator(OperatorType::Plus) ||
+				tokens[cur_token].isOperator(OperatorType::Minus)
+				))
 			{
-				if (tokens.size() == 4)
-					errorRequiredOperand(tokens, 4);
+				// rX = rY +- imm8
+				bool is_minus = tokens[cur_token].isOperator(OperatorType::Minus);
+				cur_token++;
 
-				if (tokens[4].type == TokenType::Number)
-				{
-					// rX = rY + imm8
-					// rX = rY - imm8
-					int imm8 = tokens[4].number;
-					if (!code.isValidImm8(imm8))
-						error("Immediate out of range [-128, 127]", tokens[2].line_offset);
+				if (cur_token >= tokens.size() || tokens[cur_token].type != TokenType::Number)
+					errorRequiredNumber(tokens, cur_token);
 
-					if (tokens[3].isOperator(OperatorType::Minus))
-						imm8 = -imm8;
+				// rX = rY + imm8
+				// rX = rY - imm8
+				int imm8 = tokens[cur_token].number;
+				if (is_minus)
+					imm8 = -imm8;
+				cur_token++;
 
-					code.addAddRegImm8(rX, rY, imm8);
-					return;
-				}
+				if (!code.isValidImm8(imm8))
+					error("Immediate out of range [-128, 127]", tokens[2].line_offset);
+
+
+				code.addAddRegImm8(rX, rY, imm8);
+
+				if (cur_token < tokens.size())
+					errorExtraLiteral(tokens, cur_token);
+				return;
+			}
+
+			if (cur_token < tokens.size() && tokens[cur_token].isBracket('['))
+			{
+				//rX = rY[imm8]
+				cur_token++;
+				if (cur_token >= tokens.size() || tokens[cur_token].type != TokenType::Number)
+					errorRequiredNumber(tokens, cur_token);
+				int imm8 = tokens[cur_token].number;
+				cur_token++;
+
+				if (cur_token >= tokens.size() || !tokens[cur_token].isBracket(']'))
+					errorRequiredToken("Required ]", tokens, cur_token);
+				cur_token++;
+
+				code.addLoadFromMemory(rX, rY, imm8);
+
+				if (cur_token<tokens.size())
+					errorExtraLiteral(tokens, cur_token);
+				return;
 			}
 		}
 	}

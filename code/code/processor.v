@@ -118,6 +118,11 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			alu_operation = `ALU_OP_REG0;
 			select_alu_reg0 = 0;
 		end
+		if(code_word_top==3)
+		begin
+			//rx = ry[imm8]
+			//Надо разделить reg_write_data и data_addr
+		end
 		if(code_word_top==4)
 		begin
 			//ry[imm8] = rx
