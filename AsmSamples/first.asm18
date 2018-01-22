@@ -1,7 +1,7 @@
 r0 = 0x23
-r1 = 0x16
-r1 = r0 + 3
-r1 = r1 - 0x25
+r1 = 0x16FF
+//r1 = r0 + 3
+//r1 = r1 - 0x25
 //ip = 22
 //CustomLabel:
 //CustomIdentifier

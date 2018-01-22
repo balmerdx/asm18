@@ -6,13 +6,22 @@ public:
 	AsmMaker();
 	~AsmMaker();
 
+	bool isValidImm18(int number);
 	bool isValidImm11(int number);
+	bool isValidImm11Top(int number);
 	bool isValidImm8(int number);
 	bool isValidReg(int reg);
 
 	//reg = number
 	//number - signed, 11 bit
 	void addMovImm11(int reg, int number);
+
+	//reg = number&~127;
+	//number - signed, 11 bit shifted by 7 bit
+	void addMovImm11Top(int reg, int number);
+
+	//Use addMovImm11 and addMovImm11Top
+	void addMovImm18(int reg, int number);
 
 	//rx = ry[number]
 	//number - signed, 8 bit

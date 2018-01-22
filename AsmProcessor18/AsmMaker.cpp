@@ -25,6 +25,19 @@ bool AsmMaker::isValidImm11(int number)
 	return number >= -1024 && number < 1024;
 }
 
+bool AsmMaker::isValidImm11Top(int number)
+{
+	int bit7 = 128;
+	if (number%bit7)
+		return false;
+	return number >= -1024*128 && number < 1024*128;
+}
+
+bool AsmMaker::isValidImm18(int number)
+{
+	return number >= -1024 * 128 && number < 1024 * 128;
+}
+
 bool AsmMaker::isValidImm8(int number)
 {
 	return number >= -128 && number < 128;
@@ -60,6 +73,40 @@ void AsmMaker::addMovImm11(int reg, int number)
 	
 	uint32_t op = (0x1 << BITS_TOP) | (reg << BITS_OP0) | ((uint32_t)number & 0x7FF);
 	commands.push_back(op);
+}
+
+void AsmMaker::addMovImm11Top(int reg, int number)
+{
+	assert(isValidReg(reg));
+	assert(isValidImm11Top(number));
+
+	number /= 128;
+
+	uint32_t op = (0x2 << BITS_TOP) | (reg << BITS_OP0) | ((uint32_t)number & 0x7FF);
+	commands.push_back(op);
+}
+
+void AsmMaker::addMovImm18(int reg, int number)
+{
+	assert(isValidReg(reg));
+	assert(isValidImm18(number));
+
+	if (isValidImm11(number))
+	{
+		addMovImm11(reg, number);
+		return;
+	}
+
+	if (isValidImm11Top(number))
+	{
+		addMovImm11Top(reg, number);
+		return;
+	}
+
+	int top = (number/128)*128;
+	addMovImm11Top(reg, top);
+	int bottom = number - top;
+	addAddRegImm8(reg, reg, bottom);
 }
 
 void AsmMaker::addMovIndirect(int rx, int ry, int imm8)

@@ -6,14 +6,12 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 	
 	//Интерфейс для чтения программы
 	output wire [(ADDR_SIZE-1):0] code_addr,
-	input wire [(WORD_SIZE-1):0] code_word
-/*	,
+	input wire [(WORD_SIZE-1):0] code_word/*,
 	//Интерфейс для чтения данных
 	output wire data_write_enable,
 	output wire [(ADDR_SIZE-1):0] data_addr,
 	output wire [(WORD_SIZE-1):0] data_in,
-	input wire [(WORD_SIZE-1):0] data_out
-*/	
+	input wire [(WORD_SIZE-1):0] data_out*/
 	);
 	
 	logic [3:0] reg_read_addr0;
@@ -100,6 +98,17 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			reg_write_enable = 1;
 			reg_write_addr = code_word[13:11];
 			imm = {{7{code_word[10]}}, code_word[10:0]};
+			
+			alu_operation = `ALU_OP_REG0;
+			select_alu_reg0 = 0;
+		end
+		else
+		if(code_word_top==2)
+		begin
+			//rx = imm11<<7
+			reg_write_enable = 1;
+			reg_write_addr = code_word[13:11];
+			imm = {code_word[10:0], {7{code_word[10]}}};
 			
 			alu_operation = `ALU_OP_REG0;
 			select_alu_reg0 = 0;

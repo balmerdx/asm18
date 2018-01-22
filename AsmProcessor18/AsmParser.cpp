@@ -465,14 +465,14 @@ void AsmParser::processLine(std::vector<Token>& tokens)
 
 		if (tokens[2].type == TokenType::Number)
 		{
-			// rX = imm11
-			int imm11 = tokens[2].number;
-			if (!code.isValidImm11(imm11))
-				error("Immediate out of range [-1024, 1023]", tokens[2].line_offset);
+			// rX = imm18
+			int imm18 = tokens[2].number;
+			if (!code.isValidImm18(imm18))
+				error("Immediate out of range [-131072, 131071]", tokens[2].line_offset);
 			if(tokens.size() > 3)
 				error("Bad syntax for rX = imm11", tokens[3].line_offset);
 
-			code.addMovImm11(rX, imm11);
+			code.addMovImm18(rX, imm18);
 			return;
 		}
 
