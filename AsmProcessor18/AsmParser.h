@@ -39,6 +39,7 @@ struct Token
 	OperatorType op = OperatorType::Bad;
 
 	bool isOperator(OperatorType o) const { return type == TokenType::Operator && op == o; }
+	bool isBracket(char c) const { return type == TokenType::Brackets && (str.size() == 1 && str[0]==c); }
 };
 
 /*
@@ -62,13 +63,18 @@ public:
 	AsmMaker code;
 protected:
 	void error(std::string message, int row);
-	void errorRequiredOperand(const Token& token);
+	void errorRequiredToken(const std::string& message, std::vector<Token>& tokens, size_t idx);
+	void errorRequiredOperand(std::vector<Token>& tokens, size_t idx);
+	void errorRequiredNumber(std::vector<Token>& tokens, size_t idx);
+	void errorRequiredRegister(std::vector<Token>& tokens, size_t idx);
+	void errorExtraLiteral(std::vector<Token>& tokens, size_t idx);
 
 	bool nextLine();
 
 	//Get token and move _current_line_offset
 	Token parseToken();
-	OperatorType parseOperator();
+	OperatorType parseOperator(bool parse=true);
+	bool checkEndTag();
 
 	std::string strOperator(OperatorType op);
 	void printToken(Token& token);

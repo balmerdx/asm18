@@ -30,6 +30,9 @@ public:
 	//rx = ry + imm8
 	void addAddRegImm8(int rx, int ry, int imm8);
 
+	//ry[imm8] = rx
+	void addStoreToMemory(int rx, int ry, int imm8);
+
 	void fillTo(size_t size);
 
 	bool writeToTextFile(std::string filename);

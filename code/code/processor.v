@@ -6,12 +6,12 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 	
 	//Интерфейс для чтения программы
 	output wire [(ADDR_SIZE-1):0] code_addr,
-	input wire [(WORD_SIZE-1):0] code_word/*,
+	input wire [(WORD_SIZE-1):0] code_word,
 	//Интерфейс для чтения данных
 	output wire data_write_enable,
 	output wire [(ADDR_SIZE-1):0] data_addr,
 	output wire [(WORD_SIZE-1):0] data_in,
-	input wire [(WORD_SIZE-1):0] data_out*/
+	input wire [(WORD_SIZE-1):0] data_out
 	);
 	
 	logic [3:0] reg_read_addr0;
@@ -57,6 +57,9 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 		.op(alu_operation),
 		.res(reg_write_data)
 		);
+		
+	assign data_addr = reg_write_data;
+	assign data_in = reg_read_data1;
 	
 	// instruction pointer
 	reg [(WORD_SIZE-1):0] ip;
@@ -66,6 +69,8 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 	
 	wire [3:0] code_word_top;
 	assign code_word_top = code_word[17:14];
+
+	assign data_write_enable = code_word_top==4;
 	
 	always @(*)
 	begin
@@ -79,13 +84,13 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 		alu_operation = `ALU_OP_REG0;
 		select_alu_reg0 = 1;
 		select_alu_reg1 = 1;
-			
+		
 		if(code_word_top==0)
 		begin
 			//rx = ry + imm8
 			reg_write_enable = 1;
-			reg_write_addr = code_word[13:11];
-			reg_read_addr0 = code_word[10:8];
+			reg_write_addr = code_word[13:11]; //rx
+			reg_read_addr0 = code_word[10:8]; //ry
 			
 			alu_operation = `ALU_OP_ADD;
 			select_alu_reg0 = 1;
@@ -96,7 +101,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 		begin
 			//rx = imm11
 			reg_write_enable = 1;
-			reg_write_addr = code_word[13:11];
+			reg_write_addr = code_word[13:11]; //rx
 			imm = {{7{code_word[10]}}, code_word[10:0]};
 			
 			alu_operation = `ALU_OP_REG0;
@@ -112,6 +117,17 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			
 			alu_operation = `ALU_OP_REG0;
 			select_alu_reg0 = 0;
+		end
+		if(code_word_top==4)
+		begin
+			//ry[imm8] = rx
+			reg_write_enable = 0;
+			reg_read_addr1 = code_word[13:11]; //rx
+			reg_read_addr0 = code_word[10:8]; //ry
+			
+			alu_operation = `ALU_OP_ADD;
+			select_alu_reg0 = 1;
+			select_alu_reg1 = 0;
 		end
 	end
 	

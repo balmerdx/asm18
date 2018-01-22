@@ -48,6 +48,12 @@ bool AsmMaker::isValidReg(int reg)
 	return reg >= 0 && reg < 7;
 }
 
+void AsmMaker::fillTo(size_t size)
+{
+	assert(commands.size() <= size);
+	commands.resize(size);
+}
+
 bool AsmMaker::writeToTextFile(std::string filename)
 {
 	std::ofstream file;
@@ -129,8 +135,12 @@ void AsmMaker::addAddRegImm8(int rx, int ry, int imm8)
 	commands.push_back(op);
 }
 
-void AsmMaker::fillTo(size_t size)
+void AsmMaker::addStoreToMemory(int rx, int ry, int imm8)
 {
-	assert(commands.size() <= size);
-	commands.resize(size);
+	assert(isValidReg(rx));
+	assert(isValidReg(ry));
+	assert(isValidImm8(imm8));
+
+	uint32_t op = (0x4 << BITS_TOP) | (rx << BITS_OP0) | (ry << BITS_OP1) | ((uint32_t)imm8 & 0xFF);
+	commands.push_back(op);
 }

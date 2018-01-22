@@ -243,7 +243,7 @@ Token AsmParser::parseToken()
 			//hexadecimal digit
 			next();
 			for (; isHexNumber(cur()); next());
-			if (isSpaceOrNull(cur()))
+			if (checkEndTag())
 			{
 				//number
 				lastTokenStr(token);
@@ -258,7 +258,7 @@ Token AsmParser::parseToken()
 			//octal digit
 			next();
 			for (; isOctNumber(cur()); next());
-			if (isSpaceOrNull(cur()))
+			if (checkEndTag())
 			{
 				//number
 				lastTokenStr(token);
@@ -273,7 +273,7 @@ Token AsmParser::parseToken()
 			//octal digit
 			next();
 			for (; isBinNumber(cur()); next());
-			if (isSpaceOrNull(cur()))
+			if (checkEndTag())
 			{
 				//number
 				lastTokenStr(token);
@@ -285,7 +285,7 @@ Token AsmParser::parseToken()
 
 		//decimal digit
 		for (; isNumber(cur()); next());
-		if (isSpaceOrNull(cur()))
+		if (checkEndTag())
 		{
 			//number
 			lastTokenStr(token);
@@ -304,31 +304,49 @@ Token AsmParser::parseToken()
 	return token;
 }
 
-OperatorType AsmParser::parseOperator()
+bool AsmParser::checkEndTag()
+{
+	char c = cur();
+	if (isSpaceOrNull(c))
+		return true;
+	if (parseOperator(false) != OperatorType::Bad)
+		return true;
+
+	if (isBrackets(c))
+		return true;
+
+	return false;
+}
+
+OperatorType AsmParser::parseOperator(bool parse)
 {
 	char c = cur();
 	if (c == '=')
 	{
-		next();
-		c = cur();
+		c = cur1();
 		if (c == '=')
 		{
-			next();
+			if (parse)
+			{
+				next();
+				next();
+			}
 			return OperatorType::Equal;
 		}
 
+		if (parse) next();
 		return OperatorType::Copy;
 	}
 
 	if (c == '+')
 	{
-		next();
+		if (parse) next();
 		return OperatorType::Plus;
 	}
 
 	if (c == '-')
 	{
-		next();
+		if (parse) next();
 		return OperatorType::Minus;
 	}
 
@@ -410,9 +428,35 @@ void AsmParser::error(std::string message, int row)
 	exit(1);
 }
 
-void AsmParser::errorRequiredOperand(const Token& token)
+void AsmParser::errorRequiredToken(const std::string& message, std::vector<Token>& tokens, size_t idx)
 {
-	error("Required operand", token.line_offset);
+	int row = 0;
+	if (idx < tokens.size())
+		row = tokens[idx].line_offset;
+	else
+	if (tokens.size()>0)
+		row = tokens.back().line_offset;
+	error(message, row);
+}
+
+void AsmParser::errorRequiredOperand(std::vector<Token>& tokens, size_t idx)
+{
+	errorRequiredToken("Required operand", tokens, idx);
+}
+
+void AsmParser::errorRequiredNumber(std::vector<Token>& tokens, size_t idx)
+{
+	errorRequiredToken("Required number", tokens, idx);
+}
+
+void AsmParser::errorRequiredRegister(std::vector<Token>& tokens, size_t idx)
+{
+	errorRequiredToken("Required register", tokens, idx);
+}
+
+void AsmParser::errorExtraLiteral(std::vector<Token>& tokens, size_t idx)
+{
+	errorRequiredToken("Extra literal", tokens, idx);
 }
 
 void AsmParser::processLine(std::vector<Token>& tokens)
@@ -460,8 +504,8 @@ void AsmParser::processLine(std::vector<Token>& tokens)
 	{
 		int rX = tokens[0].register_index;
 
-		if(tokens.size() == 2)
-			errorRequiredOperand(tokens.back());
+		if (2>=tokens.size())
+			errorRequiredOperand(tokens, 2);
 
 		if (tokens[2].type == TokenType::Number)
 		{
@@ -486,7 +530,7 @@ void AsmParser::processLine(std::vector<Token>& tokens)
 			    ))
 			{
 				if (tokens.size() == 4)
-					errorRequiredOperand(tokens.back());
+					errorRequiredOperand(tokens, 4);
 
 				if (tokens[4].type == TokenType::Number)
 				{
@@ -504,8 +548,44 @@ void AsmParser::processLine(std::vector<Token>& tokens)
 				}
 			}
 		}
-
 	}
+
+	// ry[imm8] = rx
+	if (tokens.size() >= 2 &&
+		tokens[0].type == TokenType::Register &&
+		tokens[1].isBracket('[')
+		)
+	{
+		int ry = tokens[0].register_index;
+
+		size_t cur_token = 2;
+		if (cur_token >= tokens.size() || tokens[cur_token].type != TokenType::Number)
+			errorRequiredNumber(tokens, cur_token);
+		int imm8 = tokens[cur_token].number;
+		if (!code.isValidImm8(imm8))
+			error("Immediate out of range [-128, 127]", tokens[cur_token].line_offset);
+		cur_token++;
+
+		if (cur_token >= tokens.size() || !tokens[cur_token].isBracket(']'))
+			errorRequiredToken("Required ]", tokens, cur_token);
+		cur_token++;
+
+		if (cur_token >= tokens.size() || !tokens[cur_token].isOperator(OperatorType::Copy))
+			errorRequiredToken("Required =", tokens, cur_token);
+		cur_token++;
+
+		if (cur_token >= tokens.size() || tokens[cur_token].type != TokenType::Register)
+			errorRequiredRegister(tokens, cur_token);
+		int rx = tokens[cur_token].register_index;
+		cur_token++;
+
+		code.addStoreToMemory(rx, ry, imm8);
+
+		if (cur_token<tokens.size())
+			errorExtraLiteral(tokens, cur_token);
+		return;
+	}
+
 
 
 	error("Bad token sequence", 0);
