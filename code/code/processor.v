@@ -8,10 +8,10 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 	output wire [(ADDR_SIZE-1):0] code_addr,
 	input wire [(WORD_SIZE-1):0] code_word,
 	//Интерфейс для чтения данных
-	output wire data_write_enable,
-	output wire [(ADDR_SIZE-1):0] data_addr,
-	output wire [(WORD_SIZE-1):0] data_in,
-	input wire [(WORD_SIZE-1):0] data_out
+	output wire memory_write_enable,
+	output wire [(ADDR_SIZE-1):0] memory_addr,
+	output wire [(WORD_SIZE-1):0] memory_in,
+	input wire [(WORD_SIZE-1):0] memory_out
 	);
 	
 	logic [3:0] reg_read_addr0;
@@ -21,6 +21,10 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 	logic reg_write_enable;
 	logic [3:0] reg_write_addr;
 	logic [(WORD_SIZE-1):0] reg_write_data;
+	logic [(WORD_SIZE-1):0] alu_write_data;
+	
+	//reg_data_from_memory==1 - перемещаем данные из memory в регистр
+	logic reg_data_from_memory;
 	
 	//constant in opcode
 	logic [(WORD_SIZE-1):0] imm;
@@ -55,11 +59,13 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 		.r0(alu_data0),
 		.r1(alu_data1),
 		.op(alu_operation),
-		.res(reg_write_data)
+		.res(alu_write_data)
 		);
 		
-	assign data_addr = reg_write_data;
-	assign data_in = reg_read_data1;
+	assign memory_addr = alu_write_data;
+	assign memory_in = reg_read_data1;
+	
+	assign reg_write_data = reg_data_from_memory? memory_out : alu_write_data;
 	
 	// instruction pointer
 	reg [(WORD_SIZE-1):0] ip;
@@ -70,7 +76,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 	wire [3:0] code_word_top;
 	assign code_word_top = code_word[17:14];
 
-	assign data_write_enable = code_word_top==4;
+	assign memory_write_enable = code_word_top==4;
 	
 	always @(*)
 	begin
@@ -78,6 +84,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 		reg_write_addr = 0;
 		reg_read_addr0 = 0;
 		reg_read_addr1 = 0;
+		reg_data_from_memory = 0;
 		//default imm8 data
 		imm = {{10{code_word[7]}}, code_word[7:0]};
 		
@@ -121,7 +128,15 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 		if(code_word_top==3)
 		begin
 			//rx = ry[imm8]
-			//Надо разделить reg_write_data и data_addr
+			reg_write_enable = 1;
+			reg_data_from_memory = 1;
+			reg_write_addr = code_word[13:11]; //rx
+			reg_read_addr0 = code_word[10:8]; //ry
+			
+			alu_operation = `ALU_OP_ADD;
+			select_alu_reg0 = 1;
+			select_alu_reg1 = 0;
+			
 		end
 		if(code_word_top==4)
 		begin

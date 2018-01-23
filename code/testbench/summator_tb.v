@@ -43,8 +43,12 @@ module multiplicator_tb;
 		$dumpvars(0, processor18);
 		$dumpvars(0, processor18.registers.regs[0]);
 		$dumpvars(0, processor18.registers.regs[1]);
+		$dumpvars(0, processor18.registers.regs[2]);
+		$dumpvars(0, processor18.registers.regs[3]);
 		$dumpvars(0, data_memory.mem[0]);
 		$dumpvars(0, data_memory.mem[1]);
+		$dumpvars(0, data_memory.mem[2]);
+		$dumpvars(0, data_memory.mem[3]);
 		
 		processor_reset = 1;
 		#2 processor_reset = 0;
@@ -53,7 +57,7 @@ module multiplicator_tb;
 		//$monitor("in_data=%x, out_data=%x addr=%x", in_data, out_data, program_memory_addr);
 		$monitor("mem[0]=%x", program_memory.mem[0]);
 		
-		#10 $finish;
+		#20 $finish;
 	end
 	
 	ram #(.ADDR_SIZE(WORD_SIZE), .WORD_SIZE(WORD_SIZE), .MEM_SIZE(MEM_SIZE)) 
@@ -78,10 +82,10 @@ module multiplicator_tb;
 		.code_addr(program_memory_addr),
 		.code_word(program_memory_out_data),
 		//Интерфейс для чтения данных
-		.data_write_enable(data_we),
-		.data_addr(data_addr),
-		.data_in(data_din),
-		.data_out(data_dout)
+		.memory_write_enable(data_we),
+		.memory_addr(data_addr),
+		.memory_in(data_din),
+		.memory_out(data_dout)
 	);
 
 endmodule
