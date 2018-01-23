@@ -1,5 +1,3 @@
-`include "alu_const.v"
-
 module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE = 18)
 	(input wire clock,
 	input logic reset,
@@ -13,6 +11,14 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 	output wire [(WORD_SIZE-1):0] memory_in,
 	input wire [(WORD_SIZE-1):0] memory_out
 	);
+	
+	// instruction pointer
+	reg [(WORD_SIZE-1):0] ip;
+	// stack pointer
+	reg [(WORD_SIZE-1):0] sp;
+	// link register
+	reg [(WORD_SIZE-1):0] lr;
+	
 	
 	logic [3:0] reg_read_addr0;
 	logic [(WORD_SIZE-1):0] reg_read_data0;
@@ -67,11 +73,8 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 	
 	assign reg_write_data = reg_data_from_memory? memory_out : alu_write_data;
 	
-	// instruction pointer
-	reg [(WORD_SIZE-1):0] ip;
 	assign code_addr = ip;
 	assign enable_add_ip = 1;
-	
 	
 	wire [3:0] code_word_top;
 	assign code_word_top = code_word[17:14];
@@ -88,7 +91,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 		//default imm8 data
 		imm = {{10{code_word[7]}}, code_word[7:0]};
 		
-		alu_operation = `ALU_OP_REG0;
+		alu_operation = alu0.ALU_OP_REG0;
 		select_alu_reg0 = 1;
 		select_alu_reg1 = 1;
 		
@@ -99,7 +102,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			reg_write_addr = code_word[13:11]; //rx
 			reg_read_addr0 = code_word[10:8]; //ry
 			
-			alu_operation = `ALU_OP_ADD;
+			alu_operation = alu0.ALU_OP_ADD;
 			select_alu_reg0 = 1;
 			select_alu_reg1 = 0;
 		end
@@ -111,7 +114,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			reg_write_addr = code_word[13:11]; //rx
 			imm = {{7{code_word[10]}}, code_word[10:0]};
 			
-			alu_operation = `ALU_OP_REG0;
+			alu_operation = alu0.ALU_OP_REG0;
 			select_alu_reg0 = 0;
 		end
 		else
@@ -122,7 +125,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			reg_write_addr = code_word[13:11];
 			imm = {code_word[10:0], {7{code_word[10]}}};
 			
-			alu_operation = `ALU_OP_REG0;
+			alu_operation = alu0.ALU_OP_REG0;
 			select_alu_reg0 = 0;
 		end
 		if(code_word_top==3)
@@ -133,7 +136,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			reg_write_addr = code_word[13:11]; //rx
 			reg_read_addr0 = code_word[10:8]; //ry
 			
-			alu_operation = `ALU_OP_ADD;
+			alu_operation = alu0.ALU_OP_ADD;
 			select_alu_reg0 = 1;
 			select_alu_reg1 = 0;
 			
@@ -145,7 +148,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			reg_read_addr1 = code_word[13:11]; //rx
 			reg_read_addr0 = code_word[10:8]; //ry
 			
-			alu_operation = `ALU_OP_ADD;
+			alu_operation = alu0.ALU_OP_ADD;
 			select_alu_reg0 = 1;
 			select_alu_reg1 = 0;
 		end
