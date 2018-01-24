@@ -13,6 +13,18 @@ enum class IfOperation
 	IF_TRUE = 7, //Set true always
 };
 
+enum class AluOperation
+{
+	ALU_OP_BAD = -1,
+
+	ALU_OP_ADD = 2,
+	ALU_OP_SUB = 3,
+	ALU_OP_AND = 4,
+	ALU_OP_OR = 5,
+	ALU_OP_XOR = 6,
+	ALU_OP_NOT = 7,
+};
+
 struct JumpData
 {
 	size_t command_pos;
@@ -58,6 +70,11 @@ public:
 	void addGotoIf(int rx, IfOperation if_op, const std::string& label, size_t text_line);
 	void addLabel(const std::string& label);
 
+	//rx op= ry
+	//rx += ry
+	//rx =~ ry
+	void addAluOp(int rx, int ry, AluOperation alu_op);
+	
 	//return labels with error (not found or very long call)
 	void fixLabels(std::vector<JumpData>& big_offset_labels, std::vector<JumpData>& not_found_labels);
 

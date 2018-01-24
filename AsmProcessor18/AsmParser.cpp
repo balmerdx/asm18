@@ -342,12 +342,34 @@ OperatorType AsmParser::parseOperator(bool parse)
 
 	if (c == '+')
 	{
+		c = cur1();
+		if (c == '=')
+		{
+			if (parse)
+			{
+				next();
+				next();
+			}
+			return OperatorType::PlusEqual;
+		}
+
 		if (parse) next();
 		return OperatorType::Plus;
 	}
 
 	if (c == '-')
 	{
+		c = cur1();
+		if (c == '=')
+		{
+			if (parse)
+			{
+				next();
+				next();
+			}
+			return OperatorType::MinusEqual;
+		}
+
 		if (parse) next();
 		return OperatorType::Minus;
 	}
@@ -384,6 +406,42 @@ OperatorType AsmParser::parseOperator(bool parse)
 
 		if (parse) next();
 		return OperatorType::Great;
+	}
+
+	if (c == '&' && cur1()=='=')
+	{
+		if (parse)
+		{
+			next();
+			next();
+		}
+		return OperatorType::AndEqual;
+	}
+
+	if (c == '|' && cur1() == '=')
+	{
+		if (parse)
+		{
+			next();
+			next();
+		}
+		return OperatorType::OrEqual;
+	}
+
+	if (c == '^' && cur1() == '=')
+	{
+		if (parse)
+		{
+			next();
+			next();
+		}
+		return OperatorType::XorEqual;
+	}
+
+	if (c == '~')
+	{
+		if (parse) next();
+		return OperatorType::Not;
 	}
 
 	return OperatorType::Bad;
@@ -560,7 +618,9 @@ void AsmParser::processLine(std::vector<Token>& tokens)
 
 	simplifyNegativeNumber(tokens);
 
-	int k = 0;
+	if (parseAluOperation(tokens))
+		return;
+
 	// rX = ...
 	if (tokens.size() >= 2 &&
 		tokens[0].type == TokenType::Register &&
@@ -780,3 +840,58 @@ bool AsmParser::parseIfGoto(std::vector<Token>& tokens)
 	return true;
 }
 
+bool AsmParser::parseAluOperation(std::vector<Token>& tokens)
+{
+	//ALU with 2 operands
+	// rx += ry
+	// rx &= ry
+	// rx = ~ ry
+
+	if (tokens.size() < 2)
+		return false;
+	size_t cur_token = 0;
+
+	if (cur_token >= tokens.size() || tokens[cur_token].type != TokenType::Register)
+		return false;
+	int rx = tokens[cur_token].register_index;
+	cur_token++;
+
+	AluOperation op = AluOperation::ALU_OP_BAD;
+	if (cur_token >= tokens.size())
+		return false;
+
+	Token& t0 = tokens[cur_token];
+	cur_token++;
+
+	if (cur_token < tokens.size() && t0.isOperator(OperatorType::Copy) &&
+		tokens[cur_token].isOperator(OperatorType::Not))
+	{
+		cur_token++;
+		op = AluOperation::ALU_OP_NOT;
+	}
+	else
+	{
+		if (t0.isOperator(OperatorType::PlusEqual))
+			op = AluOperation::ALU_OP_ADD;
+		if (t0.isOperator(OperatorType::MinusEqual))
+			op = AluOperation::ALU_OP_SUB;
+		if (t0.isOperator(OperatorType::AndEqual))
+			op = AluOperation::ALU_OP_AND;
+		if (t0.isOperator(OperatorType::OrEqual))
+			op = AluOperation::ALU_OP_OR;
+		if (t0.isOperator(OperatorType::XorEqual))
+			op = AluOperation::ALU_OP_XOR;
+
+		if (op == AluOperation::ALU_OP_BAD)
+			return false;
+	}
+
+	if (cur_token >= tokens.size() || tokens[cur_token].type != TokenType::Register)
+		errorRequiredRegister(tokens, cur_token);
+	int ry = tokens[cur_token].register_index;
+	cur_token++;
+
+	code.addAluOp(rx, ry, op);
+
+	return true;
+}

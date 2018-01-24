@@ -26,6 +26,12 @@ enum class OperatorType
 	Great,//>
 	LessOrEqual,//<=
 	GreatOrEqual,//>=
+	PlusEqual,//+=
+	MinusEqual,//-=
+	AndEqual,//&=
+	OrEqual,//|=
+	XorEqual,//+=
+	Not, //~
 };
 
 struct Token
@@ -103,6 +109,7 @@ protected:
 	void simplifyNegativeNumber(std::vector<Token>& tokens);
 
 	bool parseIfGoto(std::vector<Token>& tokens);
+	bool parseAluOperation(std::vector<Token>& tokens);
 protected:
 	std::string _filename;
 	std::string _filebody;

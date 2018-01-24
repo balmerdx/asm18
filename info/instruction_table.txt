@@ -59,11 +59,11 @@ imm11 - 11 бит в интервале -1024..1023
 	if(rx op) goto ip+addr
 	
 
-0x6 rx ry op8 
+0x6 rx ry zero5 op3 --ok
 	Арифметические операции над двумя регистрами
 	rx - является одновременно операндом и результатом операции
 	ry - операнд
-	op8 - 8 бит 
+	op3 - 3 бита
 	op=2 rx += ry //rx = rx + ry
 	op=3 rx -= ry //rx = rx - ry
 	op=4 rx &= ry //rx = rx & ry
@@ -83,10 +83,9 @@ imm11 - 11 бит в интервале -1024..1023
 0x8 imm14
 	lr = ip+1; ip = imm14 //call по абсолютному адресу
 	
-0x9 rx op sx imm8
-	op 1 bit
-	op = 0 rx = sx[imm8]
-	op = 1 sx[imm8] = rx
+0x9 zero14
+	return from function
+	ip = lr
 	
 0xA	rsx op imm8
 	op 2 bit
@@ -95,11 +94,6 @@ imm11 - 11 бит в интервале -1024..1023
 	op = 1 sp[imm8] = rsx
 	op = 2 rsx = sp+imm8 //Восновном ради sp = sp + imm8
 	op = 3 sp = rsx+imm8
-	
-0xB	rsx rsy 0
-	Причем кодируется так 0xB rx ry tbx tby 6'b0
-	tbx - top bit rsx
-	rsx = rsy
 	
 	
 //0x9 rx op5 imm6 --не будем реализовывать, обойдемся умножением со сдвигом

@@ -172,6 +172,15 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			
 			enable_add_ip = !if_ok;
 		end
+		if(code_word_top==6)
+		begin
+			//rx = rx alu_op ry
+			alu_operation = code_word[3:0];
+			reg_read_addr0 = code_word[13:11]; //rx
+			reg_read_addr1 = code_word[10:8]; //ry
+			reg_write_addr = reg_read_addr0;
+			reg_write_enable = 1;
+		end
 	end
 	
 	always @(posedge clock)

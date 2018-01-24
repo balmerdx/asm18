@@ -158,6 +158,15 @@ void AsmMaker::addGotoIf(int rx, IfOperation if_op, const std::string& label, si
 	commands.push_back(op);
 }
 
+void AsmMaker::addAluOp(int rx, int ry, AluOperation alu_op)
+{
+	assert(isValidReg(rx));
+	assert(isValidReg(ry));
+
+	uint32_t op = (0x6 << BITS_TOP) | (rx << BITS_OP0) | (ry << BITS_OP1) | ((uint32_t)alu_op & 0xFF);
+	commands.push_back(op);
+}
+
 void AsmMaker::addLabel(const std::string& label)
 {
 	assert(label_offsets.find(label) == label_offsets.end());
