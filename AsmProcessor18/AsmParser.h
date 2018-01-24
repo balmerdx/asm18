@@ -1,5 +1,6 @@
 #pragma once
 #include "AsmMaker.h"
+#include <unordered_map>
 
 enum class TokenType
 {
@@ -21,6 +22,10 @@ enum class OperatorType
 	Plus, //+
 	Minus, //-
 	Equal, //==
+	Less, //<
+	Great,//>
+	LessOrEqual,//<=
+	GreatOrEqual,//>=
 };
 
 struct Token
@@ -91,6 +96,11 @@ protected:
 	void lastTokenStr(Token& token);
 
 	void processLine(std::vector<Token>& tokens);
+
+	void link();
+
+	void removeSinglelineCommentToken(std::vector<Token>& tokens);
+	void simplifyNegativeNumber(std::vector<Token>& tokens);
 protected:
 	std::string _filename;
 	std::string _filebody;
@@ -99,4 +109,12 @@ protected:
 	int _current_line_idx; //Номер текущей строки. 1 - самая верхняя строка
 	std::string _current_line;
 	std::size_t _current_line_offset; //Смещение в пределах _current_line
+
+	struct Label
+	{
+		std::string name;
+		std::size_t text_line = 0;
+	};
+
+	std::unordered_map<std::string, Label> labels;
 };

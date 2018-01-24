@@ -102,6 +102,8 @@ void AsmParser::parse()
 
 		processLine(tokens);
 	}
+
+	link();
 }
 
 bool AsmParser::nextLine()
@@ -350,6 +352,40 @@ OperatorType AsmParser::parseOperator(bool parse)
 		return OperatorType::Minus;
 	}
 
+	if (c == '<')
+	{
+		c = cur1();
+		if (c == '=')
+		{
+			if (parse)
+			{
+				next();
+				next();
+			}
+			return OperatorType::LessOrEqual;
+		}
+
+		if (parse) next();
+		return OperatorType::Less;
+	}
+
+	if (c == '>')
+	{
+		c = cur1();
+		if (c == '=')
+		{
+			if (parse)
+			{
+				next();
+				next();
+			}
+			return OperatorType::GreatOrEqual;
+		}
+
+		if (parse) next();
+		return OperatorType::Great;
+	}
+
 	return OperatorType::Bad;
 }
 
@@ -424,6 +460,8 @@ void AsmParser::error(std::string message, int row)
 {
 	std::cout << "Error at line=" << _current_line_idx << " row=" << row << std::endl;
 	std::cout << _current_line << std::endl;
+	std::cout << std::string(row, ' ') << "^" << std::endl;
+
 	std::cout << message << std::endl;
 	exit(1);
 }
@@ -459,26 +497,24 @@ void AsmParser::errorExtraLiteral(std::vector<Token>& tokens, size_t idx)
 	errorRequiredToken("Extra literal", tokens, idx);
 }
 
-void AsmParser::processLine(std::vector<Token>& tokens)
+void AsmParser::removeSinglelineCommentToken(std::vector<Token>& tokens)
 {
-	//remove comments token
-	for (auto it = tokens.begin(); it != tokens.end(); )
+	for (auto it = tokens.begin(); it != tokens.end();)
 	{
 		if (it->type == TokenType::Comment)
 			it = tokens.erase(it);
 		else
 			++it;
 	}
+}
 
-	if (tokens.size() == 0)
-		return;
-
-	//Sequence operator minus number convert to negative number
-	for (size_t i = 0; i + 2 < tokens.size(); )
+void AsmParser::simplifyNegativeNumber(std::vector<Token>& tokens)
+{
+	for (size_t i = 0; i + 2 < tokens.size();)
 	{
 		const Token& t0 = tokens[i];
-		const Token& t1 = tokens[i+1];
-		Token& t2 = tokens[i+2];
+		const Token& t1 = tokens[i + 1];
+		Token& t2 = tokens[i + 2];
 
 		if ((t0.type == TokenType::Operator || t0.type == TokenType::Brackets) &&
 			t1.type == TokenType::Operator && t1.op == OperatorType::Minus &&
@@ -494,6 +530,15 @@ void AsmParser::processLine(std::vector<Token>& tokens)
 			i++;
 		}
 	}
+}
+
+void AsmParser::processLine(std::vector<Token>& tokens)
+{
+	removeSinglelineCommentToken(tokens);
+	if (tokens.size() == 0)
+		return;
+
+	simplifyNegativeNumber(tokens);
 
 	int k = 0;
 	// rX = ...
@@ -616,8 +661,104 @@ void AsmParser::processLine(std::vector<Token>& tokens)
 		return;
 	}
 
+	if (tokens.size() >= 1 &&
+		tokens[0].type == TokenType::Label
+		)
+	{
+		size_t cur_token = 0;
+		Label label;
+		const std::string& l = tokens[cur_token].str;
+		label.name.assign(l, 0, l.size()-1);
+		label.text_line = _current_line_offset;
 
+		labels[label.name] = label;
+		code.addLabel(label.name);
+
+		cur_token++;
+		if (cur_token<tokens.size())
+			errorExtraLiteral(tokens, cur_token);
+		return;
+	}
+
+	if (tokens.size() >= 1 &&
+		tokens[0].type == TokenType::Id && tokens[0].str == "if"
+		)
+	{
+		//if(rx op) goto Label
+		size_t cur_token = 1;
+		if (cur_token >= tokens.size() || !tokens[cur_token].isBracket('('))
+			errorRequiredToken("Required (", tokens, cur_token);
+		cur_token++;
+
+		if (cur_token >= tokens.size() || tokens[cur_token].type != TokenType::Register)
+			errorRequiredRegister(tokens, cur_token);
+		int rx = tokens[cur_token].register_index;
+		cur_token++;
+
+		if (cur_token >= tokens.size() || tokens[cur_token].type != TokenType::Operator)
+			errorRequiredToken("Required operator ==, >, <, >=, <=", tokens, cur_token);
+
+		IfOperation op = IfOperation::IF_ZERO;
+		switch (tokens[cur_token].op)
+		{
+		case OperatorType::Equal: op = IfOperation::IF_ZERO; break;
+		case OperatorType::Less: op = IfOperation::IF_LESS; break;
+		case OperatorType::Great: op = IfOperation::IF_GREAT; break;
+		case OperatorType::LessOrEqual: op = IfOperation::IF_LESS_OR_EQUAL; break;
+		case OperatorType::GreatOrEqual: op = IfOperation::IF_GREAT_OR_EQUAL; break;
+		default:
+			errorRequiredToken("Required operator ==, >, <, >=, <=", tokens, cur_token);
+		}
+		cur_token++;
+
+		if (cur_token >= tokens.size() || tokens[cur_token].type != TokenType::Number)
+			errorRequiredNumber(tokens, cur_token);
+
+		if(tokens[cur_token].number!=0)
+			errorRequiredToken("Required 0", tokens, cur_token);
+		cur_token++;
+
+		if (cur_token >= tokens.size() || !tokens[cur_token].isBracket(')'))
+			errorRequiredToken("Required )", tokens, cur_token);
+		cur_token++;
+
+		if (cur_token >= tokens.size() || !(tokens[cur_token].type == TokenType::Id && tokens[cur_token].str == "goto"))
+			errorRequiredToken("Required goto", tokens, cur_token);
+		cur_token++;
+
+		if (cur_token >= tokens.size() || !(tokens[cur_token].type == TokenType::Id))
+			errorRequiredToken("Required Label", tokens, cur_token);
+		std::string label = tokens[cur_token].str;
+		cur_token++;
+
+		code.addGotoIf(rx, op, label, _current_line_idx);
+
+		if (cur_token<tokens.size())
+			errorExtraLiteral(tokens, cur_token);
+		return;
+	}
 
 	error("Bad token sequence", 0);
 	return;
+}
+
+
+void AsmParser::link()
+{
+	std::vector<JumpData> big_offset_labels;
+	std::vector<JumpData> not_found_labels;
+	code.fixLabels(big_offset_labels, not_found_labels);
+
+	for (const JumpData& jd: big_offset_labels)
+	{
+		std::cerr << "Big offset to label. Label='" << jd.label << "'" << " Code line=" << jd.text_line << std::endl;
+	}
+
+	for (const JumpData& jd : not_found_labels)
+	{
+		std::cerr << "Label not found. Label='" << jd.label << "'" << " Code line=" << jd.text_line << std::endl;
+	}
+
+	if (big_offset_labels.size() > 0 || not_found_labels.size() > 0)
+		exit(1);
 }

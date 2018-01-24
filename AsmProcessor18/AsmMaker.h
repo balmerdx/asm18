@@ -1,4 +1,24 @@
 #pragma once
+#include <unordered_map>
+
+enum class IfOperation
+{
+	IF_ZERO = 0, //r0==0
+	IF_LESS = 1, //r0<0
+	IF_GREAT = 2,//r0>0
+	IF_LESS_OR_EQUAL = 3,//r0<=0
+	IF_GREAT_OR_EQUAL = 4,//r0>=0
+	IF_ZERO_BIT_CLEAR = 5,//r0[0]==0
+	IF_ZERO_BIT_SET = 6,//r0[0]==1
+	IF_TRUE = 7, //Set true always
+};
+
+struct JumpData
+{
+	size_t command_pos;
+	std::string label;
+	size_t text_line = 0;
+};
 
 class AsmMaker
 {
@@ -11,6 +31,8 @@ public:
 	bool isValidImm11Top(int number);
 	bool isValidImm8(int number);
 	bool isValidReg(int reg);
+
+	int codeSize() { return (int)commands.size(); }
 
 	//reg = number
 	//number - signed, 11 bit
@@ -32,9 +54,18 @@ public:
 	//rx = ry[imm8]
 	void addLoadFromMemory(int rx, int ry, int imm8);
 
+	//id(op(rx)) goto ip+imm8
+	void addGotoIf(int rx, IfOperation if_op, const std::string& label, size_t text_line);
+	void addLabel(const std::string& label);
+
+	//return labels with error (not found or very long call)
+	void fixLabels(std::vector<JumpData>& big_offset_labels, std::vector<JumpData>& not_found_labels);
+
 	void fillTo(size_t size);
 
 	bool writeToTextFile(std::string filename);
 protected:
 	std::vector<uint32_t> commands;
+	std::unordered_map<std::string, size_t> label_offsets;
+	std::vector<JumpData> short_jump_offset;
 };

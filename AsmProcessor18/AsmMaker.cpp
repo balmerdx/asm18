@@ -144,3 +144,46 @@ void AsmMaker::addStoreToMemory(int rx, int ry, int imm8)
 	uint32_t op = (0x4 << BITS_TOP) | (rx << BITS_OP0) | (ry << BITS_OP1) | ((uint32_t)imm8 & 0xFF);
 	commands.push_back(op);
 }
+
+
+void AsmMaker::addGotoIf(int rx, IfOperation if_op, const std::string& label, size_t text_line)
+{
+	assert(isValidReg(rx));
+	uint32_t op = (0x5 << BITS_TOP) | (rx << BITS_OP0) | ((uint32_t)if_op << BITS_OP1);// | ((uint32_t)imm8 & 0xFF);
+	JumpData jd;
+	jd.command_pos = commands.size();
+	jd.label = label;
+	jd.text_line = text_line;
+	short_jump_offset.push_back(jd);
+	commands.push_back(op);
+}
+
+void AsmMaker::addLabel(const std::string& label)
+{
+	assert(label_offsets.find(label) == label_offsets.end());
+	label_offsets[label] = commands.size();
+}
+
+void AsmMaker::fixLabels(std::vector<JumpData>& big_offset_labels, std::vector<JumpData>& not_found_labels)
+{
+	for (JumpData& jd : short_jump_offset)
+	{
+		auto it = label_offsets.find(jd.label);
+		if (it == label_offsets.end())
+		{
+			not_found_labels.push_back(jd);
+			continue;
+		}
+
+		size_t label_offset = it->second;
+		int imm8 = (int)label_offset - (int)jd.command_pos;
+		if (!isValidImm8(imm8))
+		{
+			big_offset_labels.push_back(jd);
+			continue;
+		}
+
+		//Fix addGotoIf commands
+		commands[jd.command_pos] |= ((uint32_t)imm8 & 0xFF);
+	}
+}
