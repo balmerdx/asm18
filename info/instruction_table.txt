@@ -44,7 +44,7 @@ imm11 - 11 бит в интервале -1024..1023
 	Запись в память
 	ry[imm8] = rx
 
-0x5 rx op imm8
+0x5 rx op imm8 --ok
 	Условный переход по относительному адресу
 	op 3 бита - операция сравнения над регистром rx
 	может быть 
@@ -64,12 +64,12 @@ imm11 - 11 бит в интервале -1024..1023
 	rx - является одновременно операндом и результатом операции
 	ry - операнд
 	op8 - 8 бит 
-	op=0 rx += ry //rx = rx + ry
-	op=1 rx -= ry //rx = rx - ry
-	op=2 rx &= ry //rx = rx & ry
-	op=3 rx |= ry //rx = rx | ry
-	op=4 rx ^= ry //rx = rx ^ ry
-	op=5 rx = ~ry
+	op=2 rx += ry //rx = rx + ry
+	op=3 rx -= ry //rx = rx - ry
+	op=4 rx &= ry //rx = rx & ry
+	op=5 rx |= ry //rx = rx | ry
+	op=6 rx ^= ry //rx = rx ^ ry
+	op=7 rx = ~ry
 	
 
 0x7 rx ry sign(rx) sign(ry) imm6

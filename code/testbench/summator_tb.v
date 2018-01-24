@@ -1,3 +1,4 @@
+
 module code_ram #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE = 18, parameter integer MEM_SIZE = 1024)
 	(input wire [(ADDR_SIZE-1):0] addr,
 	output wire [(WORD_SIZE-1):0] dout);
@@ -86,7 +87,7 @@ module processor_tb;
 		.memory_out(data_dout)
 	);
 
-endmodule
+endmodule//processor_tb
 
 /*
 module if_tb;
@@ -97,7 +98,6 @@ module if_tb;
 	logic if_ok;
 	initial
 	begin
-		
 		#2 r0 = 1; op = if_control0.IF_ZERO;
 		#2 $display("r0=%d (r0==0)=%d", r0, if_ok);
 		#2 r0 = 0; op = if_control0.IF_ZERO;
@@ -165,7 +165,7 @@ module if_tb;
 		
 		#2 r0 = 2; op = if_control0.IF_TRUE;
 		#2 $display("r0=%d (true)=%d", r0, if_ok);
-end
+	end
 	
 
 	if_control #(.WORD_SIZE(WORD_SIZE))
@@ -175,5 +175,54 @@ end
 	.op(op),
 	.if_ok(if_ok)
 	);
-endmodule
+endmodule//if_tb
+*/
+/*
+module alu_tb;
+	parameter WORD_SIZE = 18;
+	parameter WORD_MIN = -131072;
+	parameter WORD_MAX = 131071;
+	logic signed [WORD_SIZE-1:0] r0;
+	logic signed [WORD_SIZE-1:0] r1;
+	logic signed [WORD_SIZE-1:0] res;
+	logic [3:0] op;
+	initial
+	begin
+		$monitor("r0=%d, r1=%d, op=%d, res=%d", r0, r1, op, res);
+		#2 r0 = 1; r1 = 2; op = alu0.ALU_OP_ADD;
+		#2 if(res!=3) $error("Fail");
+		#2 r0 = WORD_MAX; r1 = 1; op = alu0.ALU_OP_ADD;
+		#2 if(res!=WORD_MIN) $error("Fail");
+		
+		#2 r0 = 3; r1 = 1; op = alu0.ALU_OP_SUB;
+		#2 if(res!=2) $error("Fail");
+		#2 r0 = 1; r1 = 3; op = alu0.ALU_OP_SUB;
+		#2 if(res!=-2) $error("Fail");
+		
+		#2 r0 = 18'b101111011000110010; r1 = 18'b100101111010100111; op = alu0.ALU_OP_AND;
+		#2 if(res!=$signed(18'b100101011000100010)) $error("Fail");
+		#2 r0 = 18'b001111011000110010; r1 = 18'b100101111010100111; op = alu0.ALU_OP_AND;
+		#2 if(res!=$signed(18'b000101011000100010)) $error("Fail");
+		
+		#2 r0 = 18'b101111011000110010; r1 = 18'b100101111010100111; op = alu0.ALU_OP_OR;
+		#2 if(res!=$signed(18'b101111111010110111)) $error("Fail");
+		
+		#2 r0 = 18'b101111011000110010; r1 = 18'b100101111010100111; op = alu0.ALU_OP_XOR;
+		#2 if(res!=$signed(18'b001010100010010101)) $error("Fail");
+		
+		#2 r0 = 18'b101111011000110010; r1 = 18'b100101111010100111; op = alu0.ALU_OP_NOT;
+		#2 if(res!=$signed(18'b011010000101011000)) $error("Fail");
+		
+		#2 $finish;
+	end
+	
+	alu #(.WORD_SIZE(WORD_SIZE))
+		alu0(
+		.r0(r0),
+		.r1(r1),
+		.op(op),
+		.res(res)
+		);
+
+endmodule//alu_tb
 */

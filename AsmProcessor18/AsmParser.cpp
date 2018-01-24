@@ -497,6 +497,26 @@ void AsmParser::errorExtraLiteral(std::vector<Token>& tokens, size_t idx)
 	errorRequiredToken("Extra literal", tokens, idx);
 }
 
+void AsmParser::link()
+{
+	std::vector<JumpData> big_offset_labels;
+	std::vector<JumpData> not_found_labels;
+	code.fixLabels(big_offset_labels, not_found_labels);
+
+	for (const JumpData& jd : big_offset_labels)
+	{
+		std::cerr << "Big offset to label. Label='" << jd.label << "'" << " Code line=" << jd.text_line << std::endl;
+	}
+
+	for (const JumpData& jd : not_found_labels)
+	{
+		std::cerr << "Label not found. Label='" << jd.label << "'" << " Code line=" << jd.text_line << std::endl;
+	}
+
+	if (big_offset_labels.size() > 0 || not_found_labels.size() > 0)
+		exit(1);
+}
+
 void AsmParser::removeSinglelineCommentToken(std::vector<Token>& tokens)
 {
 	for (auto it = tokens.begin(); it != tokens.end();)
@@ -680,25 +700,46 @@ void AsmParser::processLine(std::vector<Token>& tokens)
 		return;
 	}
 
-	if (tokens.size() >= 1 &&
-		tokens[0].type == TokenType::Id && tokens[0].str == "if"
-		)
+	if (parseIfGoto(tokens))
+		return;
+
+	error("Bad token sequence", 0);
+	return;
+}
+
+bool AsmParser::parseIfGoto(std::vector<Token>& tokens)
+{
+	if (tokens.size() < 1)
+		return false;
+
+	bool is_if = tokens[0].type == TokenType::Id && tokens[0].str == "if";
+	bool is_goto = tokens[0].type == TokenType::Id && tokens[0].str == "goto";
+
+	if (!is_if && !is_goto)
+		return false;
+
+	size_t cur_token = 0;
+
+	int rx = 0;
+	IfOperation op = IfOperation::IF_TRUE;
+
+	if (is_if)
 	{
 		//if(rx op) goto Label
-		size_t cur_token = 1;
+		cur_token++;
+
 		if (cur_token >= tokens.size() || !tokens[cur_token].isBracket('('))
 			errorRequiredToken("Required (", tokens, cur_token);
 		cur_token++;
 
 		if (cur_token >= tokens.size() || tokens[cur_token].type != TokenType::Register)
 			errorRequiredRegister(tokens, cur_token);
-		int rx = tokens[cur_token].register_index;
+		rx = tokens[cur_token].register_index;
 		cur_token++;
 
 		if (cur_token >= tokens.size() || tokens[cur_token].type != TokenType::Operator)
 			errorRequiredToken("Required operator ==, >, <, >=, <=", tokens, cur_token);
 
-		IfOperation op = IfOperation::IF_ZERO;
 		switch (tokens[cur_token].op)
 		{
 		case OperatorType::Equal: op = IfOperation::IF_ZERO; break;
@@ -714,51 +755,28 @@ void AsmParser::processLine(std::vector<Token>& tokens)
 		if (cur_token >= tokens.size() || tokens[cur_token].type != TokenType::Number)
 			errorRequiredNumber(tokens, cur_token);
 
-		if(tokens[cur_token].number!=0)
+		if (tokens[cur_token].number != 0)
 			errorRequiredToken("Required 0", tokens, cur_token);
 		cur_token++;
 
 		if (cur_token >= tokens.size() || !tokens[cur_token].isBracket(')'))
 			errorRequiredToken("Required )", tokens, cur_token);
 		cur_token++;
-
-		if (cur_token >= tokens.size() || !(tokens[cur_token].type == TokenType::Id && tokens[cur_token].str == "goto"))
-			errorRequiredToken("Required goto", tokens, cur_token);
-		cur_token++;
-
-		if (cur_token >= tokens.size() || !(tokens[cur_token].type == TokenType::Id))
-			errorRequiredToken("Required Label", tokens, cur_token);
-		std::string label = tokens[cur_token].str;
-		cur_token++;
-
-		code.addGotoIf(rx, op, label, _current_line_idx);
-
-		if (cur_token<tokens.size())
-			errorExtraLiteral(tokens, cur_token);
-		return;
 	}
 
-	error("Bad token sequence", 0);
-	return;
+	if (cur_token >= tokens.size() || !(tokens[cur_token].type == TokenType::Id && tokens[cur_token].str == "goto"))
+		errorRequiredToken("Required goto", tokens, cur_token);
+	cur_token++;
+
+	if (cur_token >= tokens.size() || !(tokens[cur_token].type == TokenType::Id))
+		errorRequiredToken("Required Label", tokens, cur_token);
+	std::string label = tokens[cur_token].str;
+	cur_token++;
+
+	code.addGotoIf(rx, op, label, _current_line_idx);
+
+	if (cur_token<tokens.size())
+		errorExtraLiteral(tokens, cur_token);
+	return true;
 }
 
-
-void AsmParser::link()
-{
-	std::vector<JumpData> big_offset_labels;
-	std::vector<JumpData> not_found_labels;
-	code.fixLabels(big_offset_labels, not_found_labels);
-
-	for (const JumpData& jd: big_offset_labels)
-	{
-		std::cerr << "Big offset to label. Label='" << jd.label << "'" << " Code line=" << jd.text_line << std::endl;
-	}
-
-	for (const JumpData& jd : not_found_labels)
-	{
-		std::cerr << "Label not found. Label='" << jd.label << "'" << " Code line=" << jd.text_line << std::endl;
-	}
-
-	if (big_offset_labels.size() > 0 || not_found_labels.size() > 0)
-		exit(1);
-}
