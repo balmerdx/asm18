@@ -30,6 +30,7 @@ struct JumpData
 	size_t command_pos;
 	std::string label;
 	size_t text_line = 0;
+	bool imm8_offset = true;
 };
 
 class AsmMaker
@@ -38,10 +39,11 @@ public:
 	AsmMaker();
 	~AsmMaker();
 
-	bool isValidImm18(int number);
+	bool isValidImm8(int number);
 	bool isValidImm11(int number);
 	bool isValidImm11Top(int number);
-	bool isValidImm8(int number);
+	bool isValidImm14unsigned(int number);
+	bool isValidImm18(int number);
 	bool isValidReg(int reg);
 
 	int codeSize() { return (int)commands.size(); }
@@ -69,6 +71,9 @@ public:
 	//id(op(rx)) goto ip+imm8
 	void addGotoIf(int rx, IfOperation if_op, const std::string& label, size_t text_line);
 	void addLabel(const std::string& label);
+
+	//call imm14
+	void addCall(const std::string& label, size_t text_line);
 
 	//rx op= ry
 	//rx += ry

@@ -760,22 +760,20 @@ void AsmParser::processLine(std::vector<Token>& tokens)
 		return;
 	}
 
-	if (parseIfGoto(tokens))
+	if (parseIfGotoCall(tokens))
 		return;
 
 	error("Bad token sequence", 0);
 	return;
 }
 
-bool AsmParser::parseIfGoto(std::vector<Token>& tokens)
+bool AsmParser::parseIfGotoCall(std::vector<Token>& tokens)
 {
-	if (tokens.size() < 1)
-		return false;
-
 	bool is_if = tokens[0].type == TokenType::Id && tokens[0].str == "if";
 	bool is_goto = tokens[0].type == TokenType::Id && tokens[0].str == "goto";
+	bool is_call = tokens[0].type == TokenType::Id && tokens[0].str == "call";
 
-	if (!is_if && !is_goto)
+	if (!(is_if || is_goto || is_call))
 		return false;
 
 	size_t cur_token = 0;
@@ -824,8 +822,7 @@ bool AsmParser::parseIfGoto(std::vector<Token>& tokens)
 		cur_token++;
 	}
 
-	if (cur_token >= tokens.size() || !(tokens[cur_token].type == TokenType::Id && tokens[cur_token].str == "goto"))
-		errorRequiredToken("Required goto", tokens, cur_token);
+	//goto or call
 	cur_token++;
 
 	if (cur_token >= tokens.size() || !(tokens[cur_token].type == TokenType::Id))
@@ -833,7 +830,10 @@ bool AsmParser::parseIfGoto(std::vector<Token>& tokens)
 	std::string label = tokens[cur_token].str;
 	cur_token++;
 
-	code.addGotoIf(rx, op, label, _current_line_idx);
+	if (is_call)
+		code.addCall(label, _current_line_idx);
+	else
+		code.addGotoIf(rx, op, label, _current_line_idx);
 
 	if (cur_token<tokens.size())
 		errorExtraLiteral(tokens, cur_token);

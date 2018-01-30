@@ -44,10 +44,15 @@ module processor_tb;
 		$dumpvars(0, processor18.registers.regs[1]);
 		$dumpvars(0, processor18.registers.regs[2]);
 		$dumpvars(0, processor18.registers.regs[3]);
+		$dumpvars(0, processor18.registers.regs[7]);
 		$dumpvars(0, data_memory.mem[0]);
 		$dumpvars(0, data_memory.mem[1]);
 		$dumpvars(0, data_memory.mem[2]);
 		$dumpvars(0, data_memory.mem[3]);
+		$dumpvars(0, data_memory.mem[4]);
+		$dumpvars(0, data_memory.mem[5]);
+		$dumpvars(0, data_memory.mem[6]);
+		$dumpvars(0, data_memory.mem[7]);
 		
 		processor_reset = 1;
 		#2 processor_reset = 0;

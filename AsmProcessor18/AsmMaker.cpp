@@ -33,6 +33,11 @@ bool AsmMaker::isValidImm11Top(int number)
 	return number >= -1024*128 && number < 1024*128;
 }
 
+bool AsmMaker::isValidImm14unsigned(int number)
+{
+	return number >= 0 && number < 0x4000;
+}
+
 bool AsmMaker::isValidImm18(int number)
 {
 	return number >= -1024 * 128 && number < 1024 * 128;
@@ -45,7 +50,7 @@ bool AsmMaker::isValidImm8(int number)
 
 bool AsmMaker::isValidReg(int reg)
 {
-	return reg >= 0 && reg < 7;
+	return reg >= 0 && reg <= 7;
 }
 
 void AsmMaker::fillTo(size_t size)
@@ -154,6 +159,7 @@ void AsmMaker::addGotoIf(int rx, IfOperation if_op, const std::string& label, si
 	jd.command_pos = commands.size();
 	jd.label = label;
 	jd.text_line = text_line;
+	jd.imm8_offset = true;
 	short_jump_offset.push_back(jd);
 	commands.push_back(op);
 }
@@ -164,6 +170,18 @@ void AsmMaker::addAluOp(int rx, int ry, AluOperation alu_op)
 	assert(isValidReg(ry));
 
 	uint32_t op = (0x6 << BITS_TOP) | (rx << BITS_OP0) | (ry << BITS_OP1) | ((uint32_t)alu_op & 0xFF);
+	commands.push_back(op);
+}
+
+void AsmMaker::addCall(const std::string& label, size_t text_line)
+{
+	uint32_t op = (0x8 << BITS_TOP);
+	JumpData jd;
+	jd.command_pos = commands.size();
+	jd.label = label;
+	jd.text_line = text_line;
+	jd.imm8_offset = false;
+	short_jump_offset.push_back(jd);
 	commands.push_back(op);
 }
 
@@ -185,14 +203,29 @@ void AsmMaker::fixLabels(std::vector<JumpData>& big_offset_labels, std::vector<J
 		}
 
 		size_t label_offset = it->second;
-		int imm8 = (int)label_offset - (int)jd.command_pos;
-		if (!isValidImm8(imm8))
+
+		if (jd.imm8_offset)
 		{
-			big_offset_labels.push_back(jd);
-			continue;
+			int imm8 = (int)label_offset - (int)jd.command_pos;
+			if (!isValidImm8(imm8))
+			{
+				big_offset_labels.push_back(jd);
+				continue;
+			}
+			//Fix addGotoIf commands
+			commands[jd.command_pos] |= ((uint32_t)imm8 & 0xFF);
+		}
+		else
+		{
+			//Fix goto imm14 commands
+			if (!isValidImm14unsigned(label_offset))
+			{
+				big_offset_labels.push_back(jd);
+				continue;
+			}
+			//Fix addGotoIf commands
+			commands[jd.command_pos] |= ((uint32_t)label_offset & 0x3FFF);
 		}
 
-		//Fix addGotoIf commands
-		commands[jd.command_pos] |= ((uint32_t)imm8 & 0xFF);
 	}
 }

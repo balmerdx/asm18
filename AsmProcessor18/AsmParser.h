@@ -108,7 +108,7 @@ protected:
 	void removeSinglelineCommentToken(std::vector<Token>& tokens);
 	void simplifyNegativeNumber(std::vector<Token>& tokens);
 
-	bool parseIfGoto(std::vector<Token>& tokens);
+	bool parseIfGotoCall(std::vector<Token>& tokens);
 	bool parseAluOperation(std::vector<Token>& tokens);
 protected:
 	std::string _filename;

@@ -94,15 +94,20 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 		.if_ok(if_ok)
 		);
 		
+	logic mem_write;
+	logic mem_write_ip_plus_one;
+	assign memory_write_enable = mem_write;
+	
+	wire [(WORD_SIZE-1):0] ip_plus_one;
+	assign ip_plus_one = ip + 1;
+	
 	assign memory_addr = alu_write_data;
-	assign memory_in = reg_read_data1;
+	assign memory_in = mem_write_ip_plus_one?ip_plus_one:reg_read_data1;
 	
 	assign reg_write_data = reg_data_from_memory? memory_out : alu_write_data;
 	
 	assign code_addr = ip;
 	
-	wire [(WORD_SIZE-1):0] ip_plus_one;
-	assign ip_plus_one = ip + 1;
 	
 	wire [3:0] code_word_top;
 	assign code_word_top = code_word[17:14];
@@ -111,8 +116,6 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 	wire [2:0] code_ry;
 	assign code_ry = code_word[10:8];
 	
-	logic mem_write;
-	assign memory_write_enable = mem_write;
 	
 	always @(*)
 	begin
@@ -124,6 +127,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 		reg_read_addr1 = 0;
 		reg_data_from_memory = 0;
 		mem_write = 0;
+		mem_write_ip_plus_one = 0;
 		//default imm8 data
 		imm = {{10{code_word[7]}}, code_word[7:0]};
 		
@@ -180,7 +184,6 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 		if(code_word_top==4)
 		begin
 			//ry[imm8] = rx
-			reg_write_enable = 0;
 			reg_read_addr1 = code_rx;
 			reg_read_addr0 = code_ry;
 			mem_write = 1;
@@ -211,6 +214,24 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			//sp[0] = ip+1
 			//ip = imm14
 			write_imm14_to_ip = 1;
+			
+			reg_read_addr0 = 7;//r7==sp
+			mem_write = 1;
+			mem_write_ip_plus_one = 1;
+			imm = 0;
+			
+			alu_operation = alu0.ALU_OP_ADD;
+			select_alu_reg1 = ALU_REG1_IS_IMM;
+		end
+		if(code_word_top==9)
+		begin
+			//ip = sp[imm8]
+			//return
+			write_alu_to_ip = 1;
+			reg_data_from_memory = 1;
+			reg_read_addr0 = 7;//r7==sp
+			alu_operation = alu0.ALU_OP_ADD;
+			select_alu_reg1 = ALU_REG1_IS_IMM;
 		end
 		
 	end
@@ -226,7 +247,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			ip <= {4'b0000, code_word[13:0]};
 		else
 		if(write_alu_to_ip)
-			ip <= alu_write_data;
+			ip <= reg_write_data;//alu_write_data;
 		else
 			ip <= ip_plus_one;
 	end
