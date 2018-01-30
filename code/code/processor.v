@@ -12,14 +12,18 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 	input wire [(WORD_SIZE-1):0] memory_out
 	);
 	
+	parameter integer ALU_REG0_IS_REGISTER = 0;
+	parameter integer ALU_REG0_IS_IP = 1;
+	
+	parameter integer ALU_REG1_IS_REGISTER = 0;
+	parameter integer ALU_REG1_IS_IMM = 1;
+	
 	// instruction pointer
 	reg [(WORD_SIZE-1):0] ip;
-	// stack pointer
-	reg [(WORD_SIZE-1):0] sp;
-	// link register
-	reg [(WORD_SIZE-1):0] lr;
 	
-	logic enable_add_ip;
+	//if conditional move ip = ip + imm8
+	logic write_alu_to_ip;
+	logic write_imm14_to_ip;
 	
 	
 	logic [3:0] reg_read_addr0;
@@ -50,19 +54,29 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 		.write_data(reg_write_data)
 		);
 
-	logic select_alu_reg0;
+	//see ALU_REG0_IS_* constants
+	logic [1:0] select_alu_reg0;
+	
+	//see ALU_REG1_IS_*
 	logic select_alu_reg1;
+	
 	logic [(WORD_SIZE-1):0] alu_data0;
 	logic [(WORD_SIZE-1):0] alu_data1;
 	logic [3:0] alu_operation;
 	
 	logic [2:0] if_operation;
 	logic if_ok;
+	logic [1:0] sp_operation;
 	
 	always @(*)
 	begin
-		alu_data0= select_alu_reg0?reg_read_data0:ip;
-		alu_data1 = select_alu_reg1?reg_read_data1:imm;
+		case(select_alu_reg0)
+		ALU_REG0_IS_REGISTER: alu_data0= reg_read_data0;
+		ALU_REG0_IS_IP: alu_data0 = ip;
+		default: alu_data0= reg_read_data0;
+		endcase
+		
+		alu_data1 = (select_alu_reg1==ALU_REG1_IS_REGISTER)?reg_read_data1:imm;
 	end
 	
 	alu #(.WORD_SIZE(WORD_SIZE))
@@ -87,100 +101,118 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 	
 	assign code_addr = ip;
 	
+	wire [(WORD_SIZE-1):0] ip_plus_one;
+	assign ip_plus_one = ip + 1;
+	
 	wire [3:0] code_word_top;
 	assign code_word_top = code_word[17:14];
-
-	assign memory_write_enable = code_word_top==4;
+	wire [2:0] code_rx;
+	assign code_rx = code_word[13:11];//r0..r7
+	wire [2:0] code_ry;
+	assign code_ry = code_word[10:8];
+	
+	logic mem_write;
+	assign memory_write_enable = mem_write;
 	
 	always @(*)
 	begin
-		enable_add_ip = 1;
+		write_alu_to_ip = 0;
+		write_imm14_to_ip = 0;
 		reg_write_enable = 0;
 		reg_write_addr = 0;
 		reg_read_addr0 = 0;
 		reg_read_addr1 = 0;
 		reg_data_from_memory = 0;
+		mem_write = 0;
 		//default imm8 data
 		imm = {{10{code_word[7]}}, code_word[7:0]};
 		
 		if_operation = code_word[10:8];
 		
 		alu_operation = alu0.ALU_OP_REG0;
-		select_alu_reg0 = 1;
-		select_alu_reg1 = 1;
+		select_alu_reg0 = ALU_REG0_IS_REGISTER;
+		select_alu_reg1 = ALU_REG1_IS_REGISTER;
 		
 		if(code_word_top==0)
 		begin
 			//rx = ry + imm8
 			reg_write_enable = 1;
-			reg_write_addr = code_word[13:11]; //rx
-			reg_read_addr0 = code_word[10:8]; //ry
+			reg_write_addr = code_rx;
+			reg_read_addr0 = code_ry;
 			
 			alu_operation = alu0.ALU_OP_ADD;
-			select_alu_reg1 = 0;
+			select_alu_reg1 = ALU_REG1_IS_IMM;
 		end
 		else
 		if(code_word_top==1)
 		begin
 			//rx = imm11
 			reg_write_enable = 1;
-			reg_write_addr = code_word[13:11]; //rx
+			reg_write_addr = code_rx; //rx
 			imm = {{7{code_word[10]}}, code_word[10:0]};
 			
 			alu_operation = alu0.ALU_OP_REG1;
-			select_alu_reg1 = 0;
+			select_alu_reg1 = ALU_REG1_IS_IMM;
 		end
 		else
 		if(code_word_top==2)
 		begin
 			//rx = imm11<<7
 			reg_write_enable = 1;
-			reg_write_addr = code_word[13:11];
+			reg_write_addr = code_rx;
 			imm = {code_word[10:0], {7{code_word[10]}}};
 			
 			alu_operation = alu0.ALU_OP_REG1;
-			select_alu_reg1 = 0;
+			select_alu_reg1 = ALU_REG1_IS_IMM;
 		end
 		if(code_word_top==3)
 		begin
 			//rx = ry[imm8]
 			reg_write_enable = 1;
 			reg_data_from_memory = 1;
-			reg_write_addr = code_word[13:11]; //rx
-			reg_read_addr0 = code_word[10:8]; //ry
+			reg_write_addr = code_rx;
+			reg_read_addr0 = code_ry;
 			
 			alu_operation = alu0.ALU_OP_ADD;
-			select_alu_reg1 = 0;
+			select_alu_reg1 = ALU_REG1_IS_IMM;
 			
 		end
 		if(code_word_top==4)
 		begin
 			//ry[imm8] = rx
 			reg_write_enable = 0;
-			reg_read_addr1 = code_word[13:11]; //rx
-			reg_read_addr0 = code_word[10:8]; //ry
+			reg_read_addr1 = code_rx;
+			reg_read_addr0 = code_ry;
+			mem_write = 1;
 			
 			alu_operation = alu0.ALU_OP_ADD;
-			select_alu_reg1 = 0;
+			select_alu_reg1 = ALU_REG1_IS_IMM;
 		end
 		if(code_word_top==5)
 		begin
 			//if(rx op) goto ip+addr
 			alu_operation = alu0.ALU_OP_ADD;
-			select_alu_reg0 = 0;
-			select_alu_reg1 = 0;
+			select_alu_reg0 = ALU_REG0_IS_IP;
+			select_alu_reg1 = ALU_REG1_IS_IMM;
 			
-			enable_add_ip = !if_ok;
+			write_alu_to_ip = if_ok;
 		end
 		if(code_word_top==6)
 		begin
 			//rx = rx alu_op ry
 			alu_operation = code_word[3:0];
-			reg_read_addr0 = code_word[13:11]; //rx
-			reg_read_addr1 = code_word[10:8]; //ry
+			reg_read_addr0 = code_rx;
+			reg_read_addr1 = code_ry;
 			reg_write_addr = reg_read_addr0;
 			reg_write_enable = 1;
 		end
+		if(code_word_top==8)
+		begin
+			//sp[0] = ip+1
+			//ip = imm14
+			write_imm14_to_ip = 1;
+		end
+		
 	end
 	
 	always @(posedge clock)
@@ -190,10 +222,13 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 	end
 	else
 	begin
-		if(enable_add_ip)
-			ip <= ip + 1;
+		if(write_imm14_to_ip)
+			ip <= {4'b0000, code_word[13:0]};
 		else
+		if(write_alu_to_ip)
 			ip <= alu_write_data;
+		else
+			ip <= ip_plus_one;
 	end
 
 endmodule
