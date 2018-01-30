@@ -444,6 +444,12 @@ OperatorType AsmParser::parseOperator(bool parse)
 		return OperatorType::Not;
 	}
 
+	if (c == ',')
+	{
+		if (parse) next();
+		return OperatorType::Comma;
+	}
+
 	return OperatorType::Bad;
 }
 
@@ -555,6 +561,21 @@ void AsmParser::errorExtraLiteral(std::vector<Token>& tokens, size_t idx)
 	errorRequiredToken("Extra literal", tokens, idx);
 }
 
+void AsmParser::errorRequiredImm8(std::vector<Token>& tokens, size_t idx)
+{
+	errorRequiredToken("Immediate out of range [-128, 127]", tokens, idx);
+}
+
+void AsmParser::errorRequiredImm18(std::vector<Token>& tokens, size_t idx)
+{
+	errorRequiredToken("Immediate out of range [-131072, 131071]", tokens, idx);
+}
+
+void AsmParser::errorRequiredShift(std::vector<Token>& tokens, size_t idx)
+{
+	errorRequiredToken("Immediate out of range [0, 17]", tokens, idx);
+}
+
 void AsmParser::link()
 {
 	std::vector<JumpData> big_offset_labels;
@@ -637,11 +658,11 @@ void AsmParser::processLine(std::vector<Token>& tokens)
 		{
 			// rX = imm18
 			int imm18 = tokens[cur_token].number;
+			if (!code.isValidImm18(imm18))
+				errorRequiredImm18(tokens, cur_token);
 			cur_token++;
 
-			if (!code.isValidImm18(imm18))
-				error("Immediate out of range [-131072, 131071]", tokens[2].line_offset);
-			if(tokens.size() > 3)
+			if (tokens.size() > 3)
 				error("Bad syntax for rX = imm11", tokens[3].line_offset);
 
 			code.addMovImm18(rX, imm18);
@@ -673,8 +694,7 @@ void AsmParser::processLine(std::vector<Token>& tokens)
 				cur_token++;
 
 				if (!code.isValidImm8(imm8))
-					error("Immediate out of range [-128, 127]", tokens[2].line_offset);
-
+					errorRequiredImm8(tokens, cur_token);
 
 				code.addAddRegImm8(rX, rY, imm8);
 
@@ -718,7 +738,7 @@ void AsmParser::processLine(std::vector<Token>& tokens)
 			errorRequiredNumber(tokens, cur_token);
 		int imm8 = tokens[cur_token].number;
 		if (!code.isValidImm8(imm8))
-			error("Immediate out of range [-128, 127]", tokens[cur_token].line_offset);
+			errorRequiredImm8(tokens, cur_token);
 		cur_token++;
 
 		if (cur_token >= tokens.size() || !tokens[cur_token].isBracket(']'))
@@ -764,6 +784,9 @@ void AsmParser::processLine(std::vector<Token>& tokens)
 		return;
 
 	if (parseReturn(tokens))
+		return;
+
+	if (parseMul(tokens))
 		return;
 
 	error("Bad token sequence", 0);
@@ -907,6 +930,67 @@ bool AsmParser::parseReturn(std::vector<Token>& tokens)
 	size_t cur_token = 1;
 
 	code.addReturn();
+
+	if (cur_token<tokens.size())
+		errorExtraLiteral(tokens, cur_token);
+	return true;
+}
+
+bool AsmParser::parseMul(std::vector<Token>& tokens)
+{
+	//muluu(rx, ry, imm6) -- rx = (unsigned(rx)*unsigned(ry))>>imm6
+	//mulsu(rx, ry, imm6) -- rx = (signed(rx)*unsigned(ry))>>imm6
+	//mulus(rx, ry, imm6) -- rx = (unsigned(rx)*signed(ry))>>imm6
+	//mulss(rx, ry, imm6) -- rx = (signed(rx)*signed(ry))>>imm6
+	//imm6 - shift left
+	//rx, ry - registers
+
+	bool is_muluu = tokens[0].type == TokenType::Id && tokens[0].str == "muluu";
+	bool is_mulsu = tokens[0].type == TokenType::Id && tokens[0].str == "mulsu";
+	bool is_mulus = tokens[0].type == TokenType::Id && tokens[0].str == "mulus";
+	bool is_mulss = tokens[0].type == TokenType::Id && tokens[0].str == "mulss";
+	size_t cur_token = 0;
+
+	if (!(is_muluu || is_mulsu || is_mulus || is_mulss))
+		return false;
+	bool signedx = is_mulsu || is_mulss;
+	bool signedy = is_mulus || is_mulss;
+	cur_token++;
+
+	if (!(cur_token < tokens.size() && tokens[cur_token].isBracket('(')))
+		errorRequiredToken("Required (", tokens, cur_token);
+	cur_token++;
+
+	if (!(cur_token < tokens.size() && tokens[cur_token].type == TokenType::Register))
+		errorRequiredRegister(tokens, cur_token);
+	int rx = tokens[cur_token].register_index;
+	cur_token++;
+
+	if (!(cur_token < tokens.size() && tokens[cur_token].isOperator(OperatorType::Comma)))
+		errorRequiredToken("Required ,", tokens, cur_token);
+	cur_token++;
+
+	if (!(cur_token < tokens.size() && tokens[cur_token].type == TokenType::Register))
+		errorRequiredRegister(tokens, cur_token);
+	int ry = tokens[cur_token].register_index;
+	cur_token++;
+
+	if (!(cur_token < tokens.size() && tokens[cur_token].isOperator(OperatorType::Comma)))
+		errorRequiredToken("Required ,", tokens, cur_token);
+	cur_token++;
+
+	if (!(cur_token < tokens.size() && tokens[cur_token].type == TokenType::Number))
+		errorRequiredNumber(tokens, cur_token);
+	int imm8 = tokens[cur_token].number;
+	if (!code.isValidShift(imm8))
+		errorRequiredShift(tokens, cur_token);
+	cur_token++;
+
+	if (!(cur_token < tokens.size() && tokens[cur_token].isBracket(')')))
+		errorRequiredToken("Required )", tokens, cur_token);
+	cur_token++;
+
+	code.addMul(rx, ry, signedx, signedy, imm8);
 
 	if (cur_token<tokens.size())
 		errorExtraLiteral(tokens, cur_token);

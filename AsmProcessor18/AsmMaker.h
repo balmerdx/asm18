@@ -45,6 +45,7 @@ public:
 	bool isValidImm14unsigned(int number);
 	bool isValidImm18(int number);
 	bool isValidReg(int reg);
+	bool isValidShift(int shift);
 
 	int codeSize() { return (int)commands.size(); }
 
@@ -82,6 +83,8 @@ public:
 	//rx += ry
 	//rx =~ ry
 	void addAluOp(int rx, int ry, AluOperation alu_op);
+
+	void addMul(int rx, int ry, bool signedx, bool signedy, int shift_right);
 	
 	//return labels with error (not found or very long call)
 	void fixLabels(std::vector<JumpData>& big_offset_labels, std::vector<JumpData>& not_found_labels);

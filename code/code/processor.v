@@ -209,6 +209,16 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			reg_write_addr = reg_read_addr0;
 			reg_write_enable = 1;
 		end
+/*		
+		if(code_word_top==7)
+		begin
+			// rx = (rx*ry)>>shift
+			reg_read_addr0 = code_rx;
+			reg_read_addr1 = code_ry;
+			reg_write_addr = reg_read_addr0;
+			multiplication = 1
+		end
+		*/
 		if(code_word_top==8)
 		begin
 			//sp[0] = ip+1

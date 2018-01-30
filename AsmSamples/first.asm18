@@ -1,15 +1,19 @@
-	r7 = 4
-	r0 = 2
-	call Func
-	r0 = 5
-	r1 = 6
-	r2 = 7
-	goto End
-Func:
-	r1 = 12
-	return
-End:
-	r0 = 0x33
+r0 = 2
+r1 = 3
+mulss(r0, r1, 0)
+
+//	r7 = 4
+//	r0 = 2
+//	call Func
+//	r0 = 5
+//	r1 = 6
+//	r2 = 7
+//	goto End
+//Func:
+//	r1 = 12
+//	return
+//End:
+//	r0 = 0x33
 
 
 //r0 = 2

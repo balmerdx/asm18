@@ -53,6 +53,11 @@ bool AsmMaker::isValidReg(int reg)
 	return reg >= 0 && reg <= 7;
 }
 
+bool AsmMaker::isValidShift(int shift)
+{
+	return shift >= 0 && shift < 18;
+}
+
 void AsmMaker::fillTo(size_t size)
 {
 	assert(commands.size() <= size);
@@ -195,6 +200,18 @@ void AsmMaker::addLabel(const std::string& label)
 {
 	assert(label_offsets.find(label) == label_offsets.end());
 	label_offsets[label] = commands.size();
+}
+
+void AsmMaker::addMul(int rx, int ry, bool signedx, bool signedy, int shift_right)
+{
+	assert(isValidReg(rx));
+	assert(isValidReg(ry));
+	assert(isValidShift(shift_right));
+
+	uint32_t signx = signedx ? 1 << 6 : 0;
+	uint32_t signy = signedy ? 1 << 7 : 0;
+	uint32_t op = (0x7 << BITS_TOP) | (rx << BITS_OP0) | (ry << BITS_OP1) | signx | signy | ((uint32_t)shift_right & 0x3F);
+	commands.push_back(op);
 }
 
 void AsmMaker::fixLabels(std::vector<JumpData>& big_offset_labels, std::vector<JumpData>& not_found_labels)

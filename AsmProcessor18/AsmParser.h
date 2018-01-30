@@ -32,6 +32,7 @@ enum class OperatorType
 	OrEqual,//|=
 	XorEqual,//+=
 	Not, //~
+	Comma, //,
 };
 
 struct Token
@@ -79,6 +80,9 @@ protected:
 	void errorRequiredNumber(std::vector<Token>& tokens, size_t idx);
 	void errorRequiredRegister(std::vector<Token>& tokens, size_t idx);
 	void errorExtraLiteral(std::vector<Token>& tokens, size_t idx);
+	void errorRequiredImm8(std::vector<Token>& tokens, size_t idx);
+	void errorRequiredImm18(std::vector<Token>& tokens, size_t idx);
+	void errorRequiredShift(std::vector<Token>& tokens, size_t idx);
 
 	bool nextLine();
 
@@ -111,6 +115,7 @@ protected:
 	bool parseIfGotoCall(std::vector<Token>& tokens);
 	bool parseAluOperation(std::vector<Token>& tokens);
 	bool parseReturn(std::vector<Token>& tokens);
+	bool parseMul(std::vector<Token>& tokens);
 protected:
 	std::string _filename;
 	std::string _filebody;
