@@ -185,6 +185,12 @@ void AsmMaker::addCall(const std::string& label, size_t text_line)
 	commands.push_back(op);
 }
 
+void AsmMaker::addReturn()
+{
+	uint32_t op = (0x9 << BITS_TOP);
+	commands.push_back(op);
+}
+
 void AsmMaker::addLabel(const std::string& label)
 {
 	assert(label_offsets.find(label) == label_offsets.end());

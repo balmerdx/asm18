@@ -763,6 +763,9 @@ void AsmParser::processLine(std::vector<Token>& tokens)
 	if (parseIfGotoCall(tokens))
 		return;
 
+	if (parseReturn(tokens))
+		return;
+
 	error("Bad token sequence", 0);
 	return;
 }
@@ -893,5 +896,19 @@ bool AsmParser::parseAluOperation(std::vector<Token>& tokens)
 
 	code.addAluOp(rx, ry, op);
 
+	return true;
+}
+
+bool AsmParser::parseReturn(std::vector<Token>& tokens)
+{
+	bool is_return = tokens[0].type == TokenType::Id && tokens[0].str == "return";
+	if (!is_return)
+		return false;
+	size_t cur_token = 1;
+
+	code.addReturn();
+
+	if (cur_token<tokens.size())
+		errorExtraLiteral(tokens, cur_token);
 	return true;
 }

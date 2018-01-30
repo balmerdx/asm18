@@ -110,6 +110,7 @@ protected:
 
 	bool parseIfGotoCall(std::vector<Token>& tokens);
 	bool parseAluOperation(std::vector<Token>& tokens);
+	bool parseReturn(std::vector<Token>& tokens);
 protected:
 	std::string _filename;
 	std::string _filebody;

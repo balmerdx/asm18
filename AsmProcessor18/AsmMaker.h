@@ -75,6 +75,9 @@ public:
 	//call imm14
 	void addCall(const std::string& label, size_t text_line);
 
+	//return
+	void addReturn();
+
 	//rx op= ry
 	//rx += ry
 	//rx =~ ry
