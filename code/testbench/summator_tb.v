@@ -61,7 +61,7 @@ module processor_tb;
 		//$monitor("in_data=%x, out_data=%x addr=%x", in_data, out_data, program_memory_addr);
 		$monitor("mem[0]=%x", program_memory.mem[0]);
 		
-		#70 $finish;
+		#90 $finish;
 	end
 	
 	ram #(.ADDR_SIZE(WORD_SIZE), .WORD_SIZE(WORD_SIZE), .MEM_SIZE(MEM_SIZE)) 
