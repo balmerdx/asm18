@@ -225,6 +225,13 @@ Token AsmParser::parseToken()
 			return token;
 		}
 
+		if (token.str=="sp")
+		{
+			token.type = TokenType::Register;
+			token.register_index = 7;
+			return token;
+		}
+
 		token.type = TokenType::Id;
 		return token;
 	}
@@ -674,6 +681,13 @@ void AsmParser::processLine(std::vector<Token>& tokens)
 			int rY = tokens[cur_token].register_index;
 			cur_token++;
 
+			if (cur_token == tokens.size())
+			{
+				//rx=ry
+				code.addAddRegImm8(rX, rY, 0);
+				return;
+			}
+
 			if (cur_token < tokens.size() &&
 				(tokens[cur_token].isOperator(OperatorType::Plus) ||
 				tokens[cur_token].isOperator(OperatorType::Minus)
@@ -873,6 +887,9 @@ bool AsmParser::parseAluOperation(std::vector<Token>& tokens)
 	// rx &= ry
 	// rx = ~ ry
 
+	//specials
+	// rx += imm8 is rx = rx + imm8
+
 	if (tokens.size() < 2)
 		return false;
 	size_t cur_token = 0;
@@ -912,6 +929,25 @@ bool AsmParser::parseAluOperation(std::vector<Token>& tokens)
 			return false;
 	}
 
+	if (cur_token < tokens.size() && tokens[cur_token].type == TokenType::Number &&
+		(op == AluOperation::ALU_OP_ADD || op == AluOperation::ALU_OP_SUB))
+	{
+		//rx += imm8
+		//rx -= imm8
+		int imm8 = tokens[cur_token].number;
+		if (op == AluOperation::ALU_OP_SUB)
+			imm8 = -imm8;
+		if (!code.isValidImm8(imm8))
+			errorRequiredImm8(tokens, cur_token);
+		cur_token++;
+
+		code.addAddRegImm8(rx, rx, imm8);
+
+		if (cur_token<tokens.size())
+			errorExtraLiteral(tokens, cur_token);
+		return true;
+	}
+
 	if (cur_token >= tokens.size() || tokens[cur_token].type != TokenType::Register)
 		errorRequiredRegister(tokens, cur_token);
 	int ry = tokens[cur_token].register_index;
@@ -919,6 +955,8 @@ bool AsmParser::parseAluOperation(std::vector<Token>& tokens)
 
 	code.addAluOp(rx, ry, op);
 
+	if (cur_token<tokens.size())
+		errorExtraLiteral(tokens, cur_token);
 	return true;
 }
 
