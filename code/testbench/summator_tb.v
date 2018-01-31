@@ -1,4 +1,4 @@
-/*
+
 module code_ram #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE = 18, parameter integer MEM_SIZE = 1024)
 	(input wire [(ADDR_SIZE-1):0] addr,
 	output wire [(WORD_SIZE-1):0] dout);
@@ -93,7 +93,7 @@ module processor_tb;
 	);
 
 endmodule//processor_tb
-*/
+
 /*
 module if_tb;
 	parameter WORD_SIZE = 18;
@@ -231,7 +231,7 @@ module alu_tb;
 
 endmodule//alu_tb
 */
-
+/*
 module mullxx_tb;
 	parameter WORD_SIZE = 18;
 	logic [WORD_SIZE-1:0] r0;
@@ -341,6 +341,9 @@ module mullxx_tb;
 	#2 r0 = -1; r1 = -1; shift = 0; signx = 1; signy = 1;
 	#2 if($signed(res)!=1) $error("Fail");
 	
+	#2 r0 = -'hffff; r1 = 'hffff; shift = 16; signx = 1; signy = 1;
+	#2 if($signed(res)!= -18'hffff) $error("Fail");
+	
 	end
 
 	mulxx #(.WORD_SIZE(WORD_SIZE))
@@ -354,3 +357,4 @@ module mullxx_tb;
 		);
 
 endmodule//mullxx_tb
+*/

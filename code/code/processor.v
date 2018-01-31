@@ -38,6 +38,9 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 	//reg_data_from_memory==1 - перемещаем данные из memory в регистр
 	logic reg_data_from_memory;
 	
+	//reg_data_from_mullxx==1 - перемещаем данные умножителя в регистр
+	logic reg_data_from_mullxx;
+	
 	//constant in opcode
 	logic [(WORD_SIZE-1):0] imm;
 	
@@ -63,6 +66,11 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 	logic [(WORD_SIZE-1):0] alu_data0;
 	logic [(WORD_SIZE-1):0] alu_data1;
 	logic [3:0] alu_operation;
+	
+	logic [(WORD_SIZE-1):0] mulxx_write_data;
+	logic [4:0] mulxx_shift;
+	logic mulxx_signx;
+	logic mulxx_signy;
 	
 	logic [2:0] if_operation;
 	logic if_ok;
@@ -93,6 +101,17 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 		.op(if_operation),
 		.if_ok(if_ok)
 		);
+
+	mulxx #(.WORD_SIZE(WORD_SIZE))
+		mulxx0(
+		.r0(alu_data0),
+		.r1(alu_data1),
+		.shift(mulxx_shift),
+		.signx(mulxx_signx),
+		.signy(mulxx_signy),
+		.res(mulxx_write_data) //result
+		);
+	
 		
 	logic mem_write;
 	logic mem_write_ip_plus_one;
@@ -104,7 +123,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 	assign memory_addr = alu_write_data;
 	assign memory_in = mem_write_ip_plus_one?ip_plus_one:reg_read_data1;
 	
-	assign reg_write_data = reg_data_from_memory? memory_out : alu_write_data;
+	assign reg_write_data = reg_data_from_memory? memory_out : (reg_data_from_mullxx?mulxx_write_data:alu_write_data);
 	
 	assign code_addr = ip;
 	
@@ -116,6 +135,10 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 	wire [2:0] code_ry;
 	assign code_ry = code_word[10:8];
 	
+	//see if(code_word_top==7)
+	assign mulxx_shift = code_word[4:0];
+	assign mulxx_signx = code_word[7];
+	assign mulxx_signy = code_word[6];
 	
 	always @(*)
 	begin
@@ -126,6 +149,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 		reg_read_addr0 = 0;
 		reg_read_addr1 = 0;
 		reg_data_from_memory = 0;
+		reg_data_from_mullxx = 0;
 		mem_write = 0;
 		mem_write_ip_plus_one = 0;
 		//default imm8 data
@@ -209,16 +233,15 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			reg_write_addr = reg_read_addr0;
 			reg_write_enable = 1;
 		end
-/*		
 		if(code_word_top==7)
 		begin
 			// rx = (rx*ry)>>shift
 			reg_read_addr0 = code_rx;
 			reg_read_addr1 = code_ry;
 			reg_write_addr = reg_read_addr0;
-			multiplication = 1
+			reg_data_from_mullxx = 1;
+			reg_write_enable = 1;
 		end
-		*/
 		if(code_word_top==8)
 		begin
 			//sp[0] = ip+1

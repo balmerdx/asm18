@@ -208,8 +208,8 @@ void AsmMaker::addMul(int rx, int ry, bool signedx, bool signedy, int shift_righ
 	assert(isValidReg(ry));
 	assert(isValidShift(shift_right));
 
-	uint32_t signx = signedx ? 1 << 6 : 0;
-	uint32_t signy = signedy ? 1 << 7 : 0;
+	uint32_t signx = signedx ? 1 << 7 : 0;
+	uint32_t signy = signedy ? 1 << 6 : 0;
 	uint32_t op = (0x7 << BITS_TOP) | (rx << BITS_OP0) | (ry << BITS_OP1) | signx | signy | ((uint32_t)shift_right & 0x3F);
 	commands.push_back(op);
 }
