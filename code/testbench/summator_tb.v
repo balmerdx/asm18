@@ -1,4 +1,4 @@
-
+/*
 module code_ram #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE = 18, parameter integer MEM_SIZE = 1024)
 	(input wire [(ADDR_SIZE-1):0] addr,
 	output wire [(WORD_SIZE-1):0] dout);
@@ -93,7 +93,7 @@ module processor_tb;
 	);
 
 endmodule//processor_tb
-
+*/
 /*
 module if_tb;
 	parameter WORD_SIZE = 18;
@@ -231,3 +231,126 @@ module alu_tb;
 
 endmodule//alu_tb
 */
+
+module mullxx_tb;
+	parameter WORD_SIZE = 18;
+	logic [WORD_SIZE-1:0] r0;
+	logic [WORD_SIZE-1:0] r1;
+	logic [WORD_SIZE-1:0] res;
+	logic [4:0] shift;
+	logic signx;
+	logic signy;
+	
+	logic signed [WORD_SIZE-1:0] r0s;
+	logic signed [WORD_SIZE-1:0] r1s;
+	logic signed [WORD_SIZE-1:0] ress;
+	
+	assign r0s = $signed(r0);
+	assign r1s = $signed(r1);
+	assign ress = $signed(res);
+	
+	initial
+	begin
+	$monitor("r0=%d, r1=%d, res=%d sx=%d sy=%d shift=%d, r0s=%d, r1s=%d, ress=%d", r0, r1, res, signx, signy, shift, r0s, r1s, ress);
+	r0 = 0; r1 = 0; shift = 0; signx = 0; signy = 0;
+	
+	#2 r0 = 2; r1 = 2; shift = 0; signx = 0; signy = 0;
+	#2 if(res!=4) $error("Fail");
+	
+	#2 r0 = 2; r1 = 3; shift = 0; signx = 0; signy = 0;
+	#2 if(res!=6) $error("Fail");
+	
+	#2 r0 = -2; r1 = 3; shift = 0; signx = 1; signy = 0;
+	#2 if($signed(res)!=-6) $error("Fail");
+	
+	#2 r0 = 2; r1 = -1; shift = 0; signx = 1; signy = 1;
+	#2 if($signed(res)!=-2) $error("Fail");
+	
+	#2 r0 = 'h3ffff; r1 = 1; shift = 0; signx = 0; signy = 0;
+	#2 if(res!='h3ffff) $error("Fail");
+	
+	#2 r0 = 'h3ffff; r1 = 1; shift = 1; signx = 0; signy = 0;
+	#2 if(res!='h1ffff) $error("Fail");
+	
+	#2 r0 = 'h3ffff; r1 = 1; shift = 2; signx = 0; signy = 0;
+	#2 if(res!='hffff) $error("Fail");
+	
+	#2 r0 = 'h3ffff; r1 = 1; shift = 3; signx = 0; signy = 0;
+	#2 if(res!='h7fff) $error("Fail");
+	
+	#2 r0 = 'h3ffff; r1 = 1; shift = 4; signx = 0; signy = 0;
+	#2 if(res!='h3fff) $error("Fail");
+	
+	#2 r0 = 'h3ffff; r1 = 1; shift = 5; signx = 0; signy = 0;
+	#2 if(res!='h1fff) $error("Fail");
+	
+	#2 r0 = 'h3ffff; r1 = 1; shift = 6; signx = 0; signy = 0;
+	#2 if(res!='hfff) $error("Fail");
+	
+	#2 r0 = 'h3ffff; r1 = 1; shift = 7; signx = 0; signy = 0;
+	#2 if(res!='h7ff) $error("Fail");
+	
+	#2 r0 = 'h3ffff; r1 = 37; shift = 7; signx = 0; signy = 0;
+	#2 if(res!='h127ff) $error("Fail");
+	
+	#2 r0 = 'h3ffff; r1 = 37; shift = 8; signx = 0; signy = 0;
+	#2 if(res!='h93ff) $error("Fail");
+	
+	#2 r0 = 'h3ffff; r1 = 37; shift = 9; signx = 0; signy = 0;
+	#2 if(res!='h49ff) $error("Fail");
+	
+	#2 r0 = 'h3ffff; r1 = 37; shift = 10; signx = 0; signy = 0;
+	#2 if(res!='h24ff) $error("Fail");
+	
+	#2 r0 = 4727; r1 = 56782; shift = 10; signx = 0; signy = 0;
+	#2 if(res!='h3ffe5) $error("Fail");
+	
+	#2 r0 = 4727; r1 = 56782; shift = 11; signx = 0; signy = 0;
+	#2 if(res!='h1fff2) $error("Fail");
+	
+	#2 r0 = 4727; r1 = 56782; shift = 12; signx = 0; signy = 0;
+	#2 if(res!='hfff9) $error("Fail");
+	
+	#2 r0 = 4727; r1 = 56782; shift = 13; signx = 0; signy = 0;
+	#2 if(res!='h7ffc) $error("Fail");
+	
+	#2 r0 = 4727; r1 = 56782; shift = 14; signx = 0; signy = 0;
+	#2 if(res!='h3ffe) $error("Fail");
+	
+	#2 r0 = 4727; r1 = 56782; shift = 15; signx = 0; signy = 0;
+	#2 if(res!='h1fff) $error("Fail");
+	
+	#2 r0 = 4727; r1 = 56782; shift = 16; signx = 0; signy = 0;
+	#2 if(res!='hfff) $error("Fail");
+	
+	#2 r0 = 47273; r1 = 56782; shift = 16; signx = 0; signy = 0;
+	#2 if(res!='h9ffe) $error("Fail");
+	
+	#2 r0 = 47273; r1 = 56782; shift = 17; signx = 0; signy = 0;
+	#2 if(res!='h4fff) $error("Fail");
+	
+	#2 r0 = 47273; r1 = 56782; shift = 18; signx = 0; signy = 0;
+	#2 if(res!='h27ff) $error("Fail");
+	
+	#2 r0 = 'h3ffff; r1 = 'h3ffff; shift = 18; signx = 0; signy = 0;
+	#2 if(res!='h3fffe) $error("Fail");
+	
+	#2 r0 = -1; r1 = 1; shift = 0; signx = 1; signy = 1;
+	#2 if($signed(res)!=-1) $error("Fail");
+	
+	#2 r0 = -1; r1 = -1; shift = 0; signx = 1; signy = 1;
+	#2 if($signed(res)!=1) $error("Fail");
+	
+	end
+
+	mulxx #(.WORD_SIZE(WORD_SIZE))
+		mulxx0(
+		.r0(r0),
+		.r1(r1),
+		.shift(shift), //0..17
+		.signx(signx),
+		.signy(signy),
+		.res(res) //result
+		);
+
+endmodule//mullxx_tb
