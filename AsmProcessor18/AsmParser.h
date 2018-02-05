@@ -116,6 +116,7 @@ protected:
 	bool parseAluOperation(std::vector<Token>& tokens);
 	bool parseReturn(std::vector<Token>& tokens);
 	bool parseMul(std::vector<Token>& tokens);
+	bool parseWait(std::vector<Token>& tokens);
 protected:
 	std::string _filename;
 	std::string _filebody;

@@ -85,6 +85,8 @@ public:
 	void addAluOp(int rx, int ry, AluOperation alu_op);
 
 	void addMul(int rx, int ry, bool signedx, bool signedy, int shift_right);
+
+	void addWait();
 	
 	//return labels with error (not found or very long call)
 	void fixLabels(std::vector<JumpData>& big_offset_labels, std::vector<JumpData>& not_found_labels);

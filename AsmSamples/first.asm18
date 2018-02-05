@@ -6,6 +6,8 @@ mulus(r0, r1, 6)
 r1 = -2
 mulss(r0, r1, 0)
 
+wait
+r0 = 0xAA
 
 //	r7 = 4
 //	r0 = 2

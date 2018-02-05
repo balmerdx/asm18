@@ -803,6 +803,9 @@ void AsmParser::processLine(std::vector<Token>& tokens)
 	if (parseMul(tokens))
 		return;
 
+	if (parseWait(tokens))
+		return;
+
 	error("Bad token sequence", 0);
 	return;
 }
@@ -1030,6 +1033,20 @@ bool AsmParser::parseMul(std::vector<Token>& tokens)
 
 	code.addMul(rx, ry, signedx, signedy, imm8);
 
+	if (cur_token<tokens.size())
+		errorExtraLiteral(tokens, cur_token);
+	return true;
+}
+
+bool AsmParser::parseWait(std::vector<Token>& tokens)
+{
+	size_t cur_token = 0;
+	if (!(cur_token < tokens.size() && tokens[cur_token].type == TokenType::Id && tokens[cur_token].str == "wait"))
+		return false;
+
+	code.addWait();
+
+	cur_token++;
 	if (cur_token<tokens.size())
 		errorExtraLiteral(tokens, cur_token);
 	return true;

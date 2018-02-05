@@ -9,7 +9,24 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 	output wire memory_write_enable,
 	output wire [(ADDR_SIZE-1):0] memory_addr,
 	output wire [(WORD_SIZE-1):0] memory_in,
-	input wire [(WORD_SIZE-1):0] memory_out
+	input wire [(WORD_SIZE-1):0] memory_out,
+	//Оснатовка и продолжение программы по команде wait
+	//wait_for_continue==1 - программа остановленна, так как встретилась инструкция wait
+	output wire wait_for_continue,
+	//wait_continue_execution==0 - программа останавливается, если встречает wait операцию
+	//wait_continue_execution==1 - программа дальше продлжается, если встречает wait операцию
+	//Что-бы продолжить выполнение, надо на 1 такт выставить 1 здесь
+	input wire wait_continue_execution 
+`ifdef PROCESSOR_DEBUG_INTERFACE
+	,
+	//debug_get_param = 1 - processor stopped and get data from internal registers
+	input wire debug_get_param,
+	//debug_reg_addr = 0 r0
+	//debug_reg_addr = 7 r7
+	//debug_reg_addr = 8 ip
+	input wire [3:0] debug_reg_addr,
+	output wire [(WORD_SIZE-1):0] debug_data_out
+`endif
 	);
 	
 	parameter integer ALU_REG0_IS_REGISTER = 0;
@@ -25,6 +42,8 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 	logic write_alu_to_ip;
 	logic write_imm14_to_ip;
 	
+	logic wait_logic;
+	assign wait_for_continue = wait_logic;
 	
 	logic [3:0] reg_read_addr0;
 	logic [(WORD_SIZE-1):0] reg_read_data0;
@@ -78,12 +97,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 	
 	always @(*)
 	begin
-		case(select_alu_reg0)
-		ALU_REG0_IS_REGISTER: alu_data0= reg_read_data0;
-		ALU_REG0_IS_IP: alu_data0 = ip;
-		default: alu_data0= reg_read_data0;
-		endcase
-		
+		alu_data0 = (select_alu_reg0==ALU_REG0_IS_REGISTER)?reg_read_data0:ip;
 		alu_data1 = (select_alu_reg1==ALU_REG1_IS_REGISTER)?reg_read_data1:imm;
 	end
 	
@@ -139,11 +153,16 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 	assign mulxx_shift = code_word[4:0];
 	assign mulxx_signx = code_word[7];
 	assign mulxx_signy = code_word[6];
+
+`ifdef PROCESSOR_DEBUG_INTERFACE
+	assign debug_data_out = alu_data0;
+`endif
 	
 	always @(*)
 	begin
 		write_alu_to_ip = 0;
 		write_imm14_to_ip = 0;
+		wait_logic = 0;
 		reg_write_enable = 0;
 		reg_write_addr = 0;
 		reg_read_addr0 = 0;
@@ -160,7 +179,14 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 		alu_operation = alu0.ALU_OP_REG0;
 		select_alu_reg0 = ALU_REG0_IS_REGISTER;
 		select_alu_reg1 = ALU_REG1_IS_REGISTER;
-		
+`ifdef PROCESSOR_DEBUG_INTERFACE
+		if(debug_get_param)
+		begin
+			select_alu_reg0 = debug_reg_addr[3];
+			reg_read_addr0 = debug_reg_addr[2:0];
+		end
+		else
+`endif
 		if(code_word_top==0)
 		begin
 			//rx = ry + imm8
@@ -193,6 +219,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			alu_operation = alu0.ALU_OP_REG1;
 			select_alu_reg1 = ALU_REG1_IS_IMM;
 		end
+		else
 		if(code_word_top==3)
 		begin
 			//rx = ry[imm8]
@@ -205,6 +232,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			select_alu_reg1 = ALU_REG1_IS_IMM;
 			
 		end
+		else
 		if(code_word_top==4)
 		begin
 			//ry[imm8] = rx
@@ -215,6 +243,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			alu_operation = alu0.ALU_OP_ADD;
 			select_alu_reg1 = ALU_REG1_IS_IMM;
 		end
+		else
 		if(code_word_top==5)
 		begin
 			//if(rx op) goto ip+addr
@@ -224,6 +253,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			
 			write_alu_to_ip = if_ok;
 		end
+		else
 		if(code_word_top==6)
 		begin
 			//rx = rx alu_op ry
@@ -233,6 +263,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			reg_write_addr = reg_read_addr0;
 			reg_write_enable = 1;
 		end
+		else
 		if(code_word_top==7)
 		begin
 			// rx = (rx*ry)>>shift
@@ -242,6 +273,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			reg_data_from_mullxx = 1;
 			reg_write_enable = 1;
 		end
+		else
 		if(code_word_top==8)
 		begin
 			//sp[0] = ip+1
@@ -256,6 +288,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			alu_operation = alu0.ALU_OP_ADD;
 			select_alu_reg1 = ALU_REG1_IS_IMM;
 		end
+		else
 		if(code_word_top==9)
 		begin
 			//ip = sp[imm8]
@@ -266,16 +299,29 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			alu_operation = alu0.ALU_OP_ADD;
 			select_alu_reg1 = ALU_REG1_IS_IMM;
 		end
+		else
+		if(code_word_top=='hA)
+		begin
+			//wait command
+			//Останавливаемся, если не выставлен флаг 
+			//продолжения выполнения программы
+			wait_logic = ~wait_continue_execution;
+		end
 		
 	end
 	
 	always @(posedge clock)
 	if(reset)
 	begin
-		ip = 0;
+		ip <= 0;
 	end
 	else
 	begin
+		if(wait_logic)
+		begin
+			ip <= ip;
+		end
+		else
 		if(write_imm14_to_ip)
 			ip <= {4'b0000, code_word[13:0]};
 		else

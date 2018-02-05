@@ -1,4 +1,4 @@
-	sp = 15
+	sp = 8
 	r0 = 4
 	call Factorial
 	goto End

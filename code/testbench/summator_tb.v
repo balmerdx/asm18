@@ -20,6 +20,8 @@ module processor_tb;
 	wire [(WORD_SIZE-1):0] program_memory_out_data;
 	
 	logic processor_reset;
+	logic wait_continue_execution;
+	logic wait_for_continue;
 	
 	integer i;
 	
@@ -54,14 +56,19 @@ module processor_tb;
 		$dumpvars(0, data_memory.mem[6]);
 		$dumpvars(0, data_memory.mem[7]);
 		
+		wait_continue_execution = 0;
 		processor_reset = 1;
 		#2 processor_reset = 0;
 		
-		//wait(complete_fill_ram)
 		//$monitor("in_data=%x, out_data=%x addr=%x", in_data, out_data, program_memory_addr);
-		$monitor("mem[0]=%x", program_memory.mem[0]);
+		//$monitor("mem[0]=%x", program_memory.mem[0]);
 		
-		#90 $finish;
+		wait(wait_for_continue)
+		
+		//#2 wait_continue_execution = 1;
+		//#2 wait_continue_execution = 0;
+		
+		#2 $finish;
 	end
 	
 	ram #(.ADDR_SIZE(WORD_SIZE), .WORD_SIZE(WORD_SIZE), .MEM_SIZE(MEM_SIZE)) 
@@ -89,7 +96,9 @@ module processor_tb;
 		.memory_write_enable(data_we),
 		.memory_addr(data_addr),
 		.memory_in(data_din),
-		.memory_out(data_dout)
+		.memory_out(data_dout),
+		.wait_for_continue(wait_for_continue),
+		.wait_continue_execution(wait_continue_execution)
 	);
 
 endmodule//processor_tb

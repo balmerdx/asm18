@@ -2,6 +2,7 @@
 #include "AsmMaker.h"
 #include <assert.h>
 #include <fstream>
+#include <iomanip>
 
 //4 bit top command selector
 const int BITS_TOP = 14;
@@ -11,6 +12,8 @@ const int BITS_OP0 = 11;
 
 //3 bit operand 0 or operation 1
 const int BITS_OP1 = 8;
+
+const uint32_t OPCODE_WAIT = (0xA << BITS_TOP);
 
 AsmMaker::AsmMaker()
 {
@@ -61,7 +64,7 @@ bool AsmMaker::isValidShift(int shift)
 void AsmMaker::fillTo(size_t size)
 {
 	assert(commands.size() <= size);
-	commands.resize(size);
+	commands.resize(size, OPCODE_WAIT);
 }
 
 bool AsmMaker::writeToTextFile(std::string filename)
@@ -76,7 +79,7 @@ bool AsmMaker::writeToTextFile(std::string filename)
 
 	for (uint32_t command : commands)
 	{
-		file << std::hex << command << std::endl;
+		file << std::setfill('0') << std::setw(5) << std::hex << command << std::endl;
 	}
 
 	return true;
@@ -212,6 +215,11 @@ void AsmMaker::addMul(int rx, int ry, bool signedx, bool signedy, int shift_righ
 	uint32_t signy = signedy ? 1 << 6 : 0;
 	uint32_t op = (0x7 << BITS_TOP) | (rx << BITS_OP0) | (ry << BITS_OP1) | signx | signy | ((uint32_t)shift_right & 0x3F);
 	commands.push_back(op);
+}
+
+void AsmMaker::addWait()
+{
+	commands.push_back(OPCODE_WAIT);
 }
 
 void AsmMaker::fixLabels(std::vector<JumpData>& big_offset_labels, std::vector<JumpData>& not_found_labels)
