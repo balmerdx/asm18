@@ -116,7 +116,7 @@ bool AsmParser::nextLine()
 	std::size_t cur_offset = _filebody_offset;
 	while (cur_offset < _filebody.size())
 	{
-		if (_filebody[cur_offset] == 13)
+        if (_filebody[cur_offset] == 13 || _filebody[cur_offset] == 10)
 		{
 			break;
 		}

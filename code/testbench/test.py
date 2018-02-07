@@ -18,7 +18,11 @@ voutFile = join(intermediateDir, "wout.vvp")
 vcdFile = join(intermediateDir, "wout.vcd")
 codeHex = join(intermediateDir, "code.hex")
 currentState = join(intermediateDir, "current.state")
-assemblerExecutable = abspath("../AsmProcessor18/VC2013/Debug/AsmProcessor18.exe")
+
+if sys.platform=="linux":
+	assemblerExecutable = abspath("../AsmProcessor18/qt/AsmProcessor18-Debug/AsmProcessor18")
+else:
+	assemblerExecutable = abspath("../AsmProcessor18/VC2013/Debug/AsmProcessor18.exe")
 assemblerSamples = abspath("../AsmSamples")
 print(assemblerSamples)
 
