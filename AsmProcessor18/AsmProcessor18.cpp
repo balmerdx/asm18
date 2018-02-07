@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "AsmParser.h"
+#include <string.h>
 
 int main(int argc, char* argv[])
 {
@@ -29,7 +30,7 @@ int main(int argc, char* argv[])
 
 	parser.parse();
 
-	std::cout << "Compuled. Code size = " << parser.code.codeSize() << std::endl;
+    std::cout << "Compiled. Code size = " << parser.code.codeSize() << std::endl;
 
 	parser.code.fillTo(64);
 	parser.code.writeToTextFile(out_filename);

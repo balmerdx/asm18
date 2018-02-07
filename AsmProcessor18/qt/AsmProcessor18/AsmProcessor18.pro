@@ -3,4 +3,12 @@ CONFIG += console c++11
 CONFIG -= app_bundle
 CONFIG -= qt
 
-SOURCES += main.cpp
+SOURCES += \
+    ../../AsmMaker.cpp \
+    ../../AsmParser.cpp \
+    ../../AsmProcessor18.cpp
+
+HEADERS += \
+    ../../AsmMaker.h \
+    ../../AsmParser.h \
+    ../../stdafx.h
