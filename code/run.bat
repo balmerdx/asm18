@@ -1,1 +1,1 @@
-vvp wout.vvp
+python testbench/test.py run

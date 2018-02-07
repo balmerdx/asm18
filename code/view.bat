@@ -1,1 +1,1 @@
-gtkwave wout.vcd
+gtkwave intermediate/wout.vcd
