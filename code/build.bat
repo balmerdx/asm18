@@ -1,1 +1,1 @@
-iverilog -o intermediate/wout.vvp code/summator.v code/ram.v code/regfile.v code/processor.v code/alu.v code/if_control.v code/mulxx.v testbench/processor_tb.v -g 2012 -g verilog-ams -I testbench -I code -DOUT_VCD
+python testbench/test.py build

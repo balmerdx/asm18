@@ -1,1 +1,1 @@
-vvp intermediate/wout.vvp
+python testbench/test.py run

@@ -1,0 +1,1 @@
+python testbench/test.py compile ../AsmSamples/loop.asm18

@@ -30,7 +30,7 @@ module processor_tb;
 	task print_state;
 		integer i;
 		integer f;
-		f = $fopen("intermediate/state.txt", "w");
+		f = $fopen("intermediate/current.state", "w");
 		$fwrite(f,"registers\n");
 		for (i = 0; i < 8; i = i +1)
 			$fwrite(f,"r[%0d] = %h\n", i, processor18.registers.regs[i]);
