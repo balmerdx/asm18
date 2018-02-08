@@ -259,8 +259,19 @@ https://www.nandland.com/vhdl/modules/module-uart-serial-port-rs232.html
 	-s topmodule - выбор topmodule для запуска
 	
 
-- перенести test.py в py директорию
+- перенести test.py в py директорию --ok
+
 - сделать проект под Cyclone IV EP4CE10E22C8N
+	Файлы в пустом проекте
+	.:
+	db
+	test_asm18.qpf
+	test_asm18.qsf
+
+	./db:
+	test_asm18.db_info
+	test_asm18.quiproj.3898.rdr.flock	
+
 	- скопипастить код для светодиодиков и кнопок
 	- скопипастить код UART
 
