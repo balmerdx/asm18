@@ -13,14 +13,26 @@ logic uart_byte_send;
 wire [7:0] uart_rx_byte;
 wire uart_tx_active;
 wire uart_tx_done;
+logic [7:0] usart_out_data;
 
 //logic [29:0] count;
-	assign ledout = ~uart_rx_byte;
+	//assign ledout = ~uart_rx_byte;
 
 	always @ ( posedge clk_50M )
 	begin
 		//count <= count+1'd1;
 		//ledout <= ~count[29:22];
+		if(uart_byte_received)
+		begin
+			ledout <= ~uart_rx_byte;
+			usart_out_data <= uart_rx_byte+8'h10;
+			uart_byte_send <= 1;
+		end
+		
+		if(uart_byte_send)
+		begin
+			uart_byte_send <= 0;
+		end
 	end
 
  uart_rx 
