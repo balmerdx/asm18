@@ -1,1 +1,1 @@
-python testbench/test.py build
+python py/test.py build

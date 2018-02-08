@@ -258,3 +258,9 @@ https://www.nandland.com/vhdl/modules/module-uart-serial-port-rs232.html
 	-P<symbol>=<value> аналог defparam U0.my_secret = 11;
 	-s topmodule - выбор topmodule для запуска
 	
+
+- перенести test.py в py директорию
+- сделать проект под Cyclone IV EP4CE10E22C8N
+	- скопипастить код для светодиодиков и кнопок
+	- скопипастить код UART
+

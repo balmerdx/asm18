@@ -1,1 +1,1 @@
-python testbench/test.py run
+python py/test.py run

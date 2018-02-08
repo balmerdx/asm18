@@ -1,1 +1,1 @@
-python testbench/test.py compile ../AsmSamples/loop.asm18
+python py/test.py compile ../AsmSamples/loop.asm18
