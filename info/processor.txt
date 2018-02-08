@@ -272,6 +272,6 @@ https://www.nandland.com/vhdl/modules/module-uart-serial-port-rs232.html
 	test_asm18.db_info
 	test_asm18.quiproj.3898.rdr.flock	
 
-	- скопипастить код для светодиодиков и кнопок
+	- скопипастить код для светодиодиков и кнопок --ok
 	- скопипастить код UART
 
