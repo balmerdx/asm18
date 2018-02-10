@@ -45,6 +45,7 @@ module uart_tx
             r_Tx_Done     <= 1'b0;
             r_Clock_Count <= 0;
             r_Bit_Index   <= 0;
+				r_Tx_Active   <= 1'b0; //balmer
              
             if (i_Tx_DV == 1'b1)
               begin
@@ -65,7 +66,7 @@ module uart_tx
             // Wait CLKS_PER_BIT-1 clock cycles for start bit to finish
             if (r_Clock_Count < CLKS_PER_BIT-1)
               begin
-                r_Clock_Count <= r_Clock_Count + 1;
+                r_Clock_Count <= r_Clock_Count + 1'b1;
                 r_SM_Main     <= s_TX_START_BIT;
               end
             else
@@ -83,7 +84,7 @@ module uart_tx
              
             if (r_Clock_Count < CLKS_PER_BIT-1)
               begin
-                r_Clock_Count <= r_Clock_Count + 1;
+                r_Clock_Count <= r_Clock_Count + 1'b1;
                 r_SM_Main     <= s_TX_DATA_BITS;
               end
             else
@@ -93,7 +94,7 @@ module uart_tx
                 // Check if we have sent out all bits
                 if (r_Bit_Index < 7)
                   begin
-                    r_Bit_Index <= r_Bit_Index + 1;
+                    r_Bit_Index <= r_Bit_Index + 1'b1;
                     r_SM_Main   <= s_TX_DATA_BITS;
                   end
                 else
@@ -111,9 +112,9 @@ module uart_tx
             o_Tx_Serial <= 1'b1;
              
             // Wait CLKS_PER_BIT-1 clock cycles for Stop bit to finish
-            if (r_Clock_Count < CLKS_PER_BIT-1)
+            if (r_Clock_Count < CLKS_PER_BIT-1+3)
               begin
-                r_Clock_Count <= r_Clock_Count + 1;
+                r_Clock_Count <= r_Clock_Count + 1'b1;
                 r_SM_Main     <= s_TX_STOP_BIT;
               end
             else
@@ -121,7 +122,7 @@ module uart_tx
                 r_Tx_Done     <= 1'b1;
                 r_Clock_Count <= 0;
                 r_SM_Main     <= s_CLEANUP;
-                r_Tx_Active   <= 1'b0;
+                //r_Tx_Active   <= 1'b0; //balmer
               end
           end // case: s_Tx_STOP_BIT
          

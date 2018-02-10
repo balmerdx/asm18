@@ -1,60 +1,43 @@
 module test_asm18(
 	input clk_50M,
 	output reg [7:0] ledout,
-	input uart_rx,
-	output reg uart_tx,
+	input uart_rx_pin,
+	output reg uart_tx_pin,
 	input key_86,
 	input key_87
 );
 
-localparam UART_CLKS_PER_BIT = 100; //500 kbps
-logic uart_byte_received;
-logic uart_byte_send;
-wire [7:0] uart_rx_byte;
-wire uart_tx_active;
-wire uart_tx_done;
-logic [7:0] usart_out_data;
+logic [17:0] data_address_a = 0;
+logic [17:0] data_address_b = 0;
+logic [17:0] data_write_a = 0;
+logic [17:0] data_write_b;
+wire [17:0] data_read_a;
+wire [17:0] data_read_b;
+logic data_wren_a = 0;
+logic data_wren_b;
 
-//logic [29:0] count;
-	//assign ledout = ~uart_rx_byte;
+uart_controller uart_controller0(
+	.clk_50M(clk_50M),
+	.uart_rx_pin(uart_rx_pin),
+	.uart_tx_pin(uart_tx_pin),
+	.ledout_pins(ledout),
+	.data_address(data_address_b),
+	.data_read(data_read_b),
+	.data_write(data_write_b),
+	.data_wren(data_wren_b)
+);
 
-	always @ ( posedge clk_50M )
-	begin
-		//count <= count+1'd1;
-		//ledout <= ~count[29:22];
-		if(uart_byte_received)
-		begin
-			ledout <= ~uart_rx_byte;
-			usart_out_data <= uart_rx_byte+8'h10;
-			uart_byte_send <= 1;
-		end
-		
-		if(uart_byte_send)
-		begin
-			uart_byte_send <= 0;
-		end
-	end
+mem1k  mem1k_data(
+	.address_a(data_address_a),
+	.address_b(data_address_b),
+	.clock(clk_50M),
+	.data_a(data_write_a),
+	.data_b(data_write_b),
+	.wren_a(data_wren_a),
+	.wren_b(data_wren_b),
+	.q_a(data_read_a),
+	.q_b(data_read_b)
+);
 
- uart_rx 
-  #(.CLKS_PER_BIT(UART_CLKS_PER_BIT))
-	uart_rx0
-  (
-   .i_Clock(clk_50M),
-   .i_Rx_Serial(uart_rx),
-   .o_Rx_DV(uart_byte_received),
-   .o_Rx_Byte(uart_rx_byte)
-   );
-
-uart_tx 
-  #(.CLKS_PER_BIT(UART_CLKS_PER_BIT))
-   uart_tx0
-  (
-   .i_Clock(clk_50M),
-   .i_Tx_DV(uart_byte_send),
-   .i_Tx_Byte(usart_out_data), 
-   .o_Tx_Active(uart_tx_active),
-   .o_Tx_Serial(uart_tx),
-   .o_Tx_Done(uart_tx_done)
-   );
 
 endmodule

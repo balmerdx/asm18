@@ -77,7 +77,7 @@ module uart_rx
               end
             else
               begin
-                r_Clock_Count <= r_Clock_Count + 1;
+                r_Clock_Count <= r_Clock_Count + 1'b1;
                 r_SM_Main     <= s_RX_START_BIT;
               end
           end // case: s_RX_START_BIT
@@ -88,7 +88,7 @@ module uart_rx
           begin
             if (r_Clock_Count < CLKS_PER_BIT-1)
               begin
-                r_Clock_Count <= r_Clock_Count + 1;
+                r_Clock_Count <= r_Clock_Count + 1'b1;
                 r_SM_Main     <= s_RX_DATA_BITS;
               end
             else
@@ -99,7 +99,7 @@ module uart_rx
                 // Check if we have received all bits
                 if (r_Bit_Index < 7)
                   begin
-                    r_Bit_Index <= r_Bit_Index + 1;
+                    r_Bit_Index <= r_Bit_Index + 1'b1;
                     r_SM_Main   <= s_RX_DATA_BITS;
                   end
                 else
@@ -117,7 +117,7 @@ module uart_rx
             // Wait CLKS_PER_BIT-1 clock cycles for Stop bit to finish
             if (r_Clock_Count < CLKS_PER_BIT-1)
               begin
-                r_Clock_Count <= r_Clock_Count + 1;
+                r_Clock_Count <= r_Clock_Count + 1'b1;
                 r_SM_Main     <= s_RX_STOP_BIT;
               end
             else
