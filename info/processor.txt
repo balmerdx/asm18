@@ -306,8 +306,10 @@ https://www.nandland.com/vhdl/modules/module-uart-serial-port-rs232.html
 
 	Данные для 18 бит регистров/памяти кратны трем байтам.
 
-	0 - set led
-	1 - write to data memory.
-	2 - read data memory.
+	0 - set led --ok
+	1 - write to data memory. --ok
+	2 - read data memory. --ok
+	3 - write to code memory.
+	4 - read code memory.
 
 

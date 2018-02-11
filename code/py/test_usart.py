@@ -16,6 +16,8 @@ import struct
 COMMAND_SET_LED = 0
 COMMAND_WRITE_DATA_MEMORY = 1
 COMMAND_READ_DATA_MEMORY = 2
+COMMAND_WRITE_CODE_MEMORY = 3
+COMMAND_READ_CODE_MEMORY = 4
 
 
 ser = None
@@ -44,8 +46,7 @@ def sendLed(leds):
 	data = struct.pack("=BHH", command, address, size)
 	ser.write(data)
 
-def sendWriteDataMemory(address, memoryContent):
-	command = COMMAND_WRITE_DATA_MEMORY
+def sendWriteMemory(command, address, memoryContent):
 	size = len(memoryContent)
 	data = bytearray(struct.pack("=BHH", command, address, size))
 	for d in memoryContent:
@@ -56,8 +57,7 @@ def sendWriteDataMemory(address, memoryContent):
 
 	ser.write(data)
 
-def sendReadDataMemory(address, size):
-	command = COMMAND_READ_DATA_MEMORY
+def sendReadMemory(command, address, size):
 	data = struct.pack("=BHH", command, address, size)
 	ser.write(data)
 	data = ser.read(size*3)
@@ -68,6 +68,18 @@ def sendReadDataMemory(address, size):
 		out.append(n)
 	return out
 
+def sendWriteDataMemory(address, memoryContent):
+	sendWriteMemory(COMMAND_WRITE_DATA_MEMORY, address, memoryContent)
+
+def sendReadDataMemory(address, size):
+	return sendReadMemory(COMMAND_READ_DATA_MEMORY, address, size)
+
+def sendWriteCodeMemory(address, memoryContent):
+	sendWriteMemory(COMMAND_WRITE_CODE_MEMORY, address, memoryContent)
+
+def sendReadCodeMemory(address, size):
+	return sendReadMemory(COMMAND_READ_CODE_MEMORY, address, size)
+
 if __name__ == "__main__":
 	if not connect():
 		print("Cannot connect to serial port")
@@ -75,9 +87,10 @@ if __name__ == "__main__":
 
 
 	#sendLed(0x0F)
-	memoryContent = [3, 7, 12, 28, 255, 12345, 65789, 102302]
-	#sendWriteDataMemory(0, memoryContent)
+	#sendWriteDataMemory(0, [3, 7, 12, 28, 255, 12345, 65789, 102302])
+	#sendWriteCodeMemory(0, [1024, 1000, 100, 50, 25])
 
-	print(sendReadDataMemory(0, 20))
+	print("data=", sendReadDataMemory(0, 20))
+	print("code=", sendReadCodeMemory(0, 20))
 	
 	pass
