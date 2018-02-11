@@ -29,11 +29,11 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 `endif
 	);
 	
-	parameter integer ALU_REG0_IS_REGISTER = 0;
-	parameter integer ALU_REG0_IS_IP = 1;
+	localparam integer ALU_REG0_IS_REGISTER = 0;
+	localparam integer ALU_REG0_IS_IP = 1;
 	
-	parameter integer ALU_REG1_IS_REGISTER = 0;
-	parameter integer ALU_REG1_IS_IMM = 1;
+	localparam integer ALU_REG1_IS_REGISTER = 0;
+	localparam integer ALU_REG1_IS_IMM = 1;
 	
 	// instruction pointer
 	reg [(WORD_SIZE-1):0] ip;

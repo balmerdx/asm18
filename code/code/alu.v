@@ -6,14 +6,14 @@ module alu #(parameter integer WORD_SIZE = 18)
 	output reg [WORD_SIZE-1:0] res //result
 	);
 	
-	parameter integer ALU_OP_REG0 = 0;
-	parameter integer ALU_OP_REG1 = 1;
-	parameter integer ALU_OP_ADD = 2;
-	parameter integer ALU_OP_SUB = 3;
-	parameter integer ALU_OP_AND = 4;
-	parameter integer ALU_OP_OR = 5;
-	parameter integer ALU_OP_XOR = 6;
-	parameter integer ALU_OP_NOT = 7;
+	localparam integer ALU_OP_REG0 = 0;
+	localparam integer ALU_OP_REG1 = 1;
+	localparam integer ALU_OP_ADD = 2;
+	localparam integer ALU_OP_SUB = 3;
+	localparam integer ALU_OP_AND = 4;
+	localparam integer ALU_OP_OR = 5;
+	localparam integer ALU_OP_XOR = 6;
+	localparam integer ALU_OP_NOT = 7;
 
 	
 	always @(*)

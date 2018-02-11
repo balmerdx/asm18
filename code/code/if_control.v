@@ -5,14 +5,14 @@ module if_control #(parameter integer WORD_SIZE = 18)
 	output reg if_ok
 	);
 
-	parameter integer IF_ZERO = 0; //r0==0
-	parameter integer IF_LESS = 1; //r0<0
-	parameter integer IF_GREAT = 2;//r0>0
-	parameter integer IF_LESS_OR_EQUAL = 3;//r0<=0
-	parameter integer IF_GREAT_OR_EQUAL = 4;//r0>=0
-	parameter integer IF_ZERO_BIT_CLEAR = 5;//r0[0]==0
-	parameter integer IF_ZERO_BIT_SET = 6;//r0[0]==1
-	parameter integer IF_TRUE = 7; //Set true always
+	localparam integer IF_ZERO = 0; //r0==0
+	localparam integer IF_LESS = 1; //r0<0
+	localparam integer IF_GREAT = 2;//r0>0
+	localparam integer IF_LESS_OR_EQUAL = 3;//r0<=0
+	localparam integer IF_GREAT_OR_EQUAL = 4;//r0>=0
+	localparam integer IF_ZERO_BIT_CLEAR = 5;//r0[0]==0
+	localparam integer IF_ZERO_BIT_SET = 6;//r0[0]==1
+	localparam integer IF_TRUE = 7; //Set true always
 	
 	wire is_zero = (r0==0);
 	wire is_less = r0[WORD_SIZE-1];

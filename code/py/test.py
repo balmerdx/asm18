@@ -27,7 +27,6 @@ assemblerSamples = abspath("../AsmSamples")
 print(assemblerSamples)
 
 sourceProcessor = [
-	"summator.v",
 	"ram.v",
 	"regfile.v",
 	"processor.v",

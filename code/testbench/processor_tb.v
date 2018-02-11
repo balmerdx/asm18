@@ -110,6 +110,7 @@ module processor_tb;
 		.memory_addr(data_addr),
 		.memory_in(data_din),
 		.memory_out(data_dout),
+		//Интерфейс для ожидания внешних данных
 		.wait_for_continue(wait_for_continue),
 		.wait_continue_execution(wait_continue_execution)
 	);

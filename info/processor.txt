@@ -309,7 +309,12 @@ https://www.nandland.com/vhdl/modules/module-uart-serial-port-rs232.html
 	0 - set led --ok
 	1 - write to data memory. --ok
 	2 - read data memory. --ok
-	3 - write to code memory.
-	4 - read code memory.
+	3 - write to code memory. --ok
+	4 - read code memory. --ok
 
+- стереть summator.v
 
+- прикрутить процессор
+	- скомпилировать
+	- команда reset (on/off)
+	- команда Read registers

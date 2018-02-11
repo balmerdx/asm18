@@ -1,3 +1,4 @@
+*.bak
 code/intermediate
 AsmProcessor18/VC2013/Debug
 AsmProcessor18/VC2013/AsmProcessor18.opensdf
