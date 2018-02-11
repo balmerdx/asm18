@@ -63,7 +63,6 @@ begin
 		rx_timeout <= 24'd5000000;//100 ms timeout
 		case(rx_state)
 		RX_COMMAND: begin
-				leds <= 8'b00000001;
 				rx_state <= RX_ADDRESS;
 				command <= uart_rx_byte;
 				address_index <= 0;
@@ -74,13 +73,11 @@ begin
 		RX_ADDRESS: begin
 				if(address_index==0)
 				begin
-					leds <= 8'b00000010;
 					address[7:0] <= uart_rx_byte;
 					address_index <= 1;
 				end
 				else
 				begin
-					leds <= 8'b00000100;
 					address[15:8] <= uart_rx_byte;
 					rx_state <= RX_SIZE;
 				end
@@ -88,13 +85,11 @@ begin
 		RX_SIZE : begin
 				if(size_index==0)
 				begin
-					leds <= 8'b00001000;
 					size[7:0] <= uart_rx_byte;
 					size_index <= 1;
 				end
 				else
 				begin
-					leds <= 8'b00010000;
 					size[15:8] <= uart_rx_byte;
 					rx_state <= RX_PROCESSING_COMMAND;
 				end
@@ -114,8 +109,6 @@ begin
 				2 : begin
 					rx_byte_index <= 0;
 					data_rx[17:16] <= uart_rx_byte[1:0];
-					address <= address + 1'd1;
-					leds <= address[7:0]; //debug
 					size <= size-1'd1;
 					data_wren <= 1;
 				end
@@ -140,6 +133,12 @@ begin
 					rx_state <= RX_COMMAND;
 				end
 			COMMAND_WRITE_DATA_MEMORY: begin
+					if(data_wren)
+					begin
+						//increment address on next quant
+						address <= address + 1'd1;
+					end
+						
 					if(size==0)
 					begin
 						rx_state <= RX_COMMAND;
@@ -152,20 +151,20 @@ begin
 						begin
 							case(tx_byte_index)
 							0: begin
-								//usart_tx_data <= data_read[7:0];
-								usart_tx_data <= {address[5:0], tx_byte_index};
+								usart_tx_data <= data_read[7:0];
+								//usart_tx_data <= {address[5:0], tx_byte_index};
 								tx_byte_index <= 1;
 								uart_tx_send <= 1;
 							end
 							1: begin
-								//usart_tx_data <= data_read[15:8];
-								usart_tx_data <= {address[5:0], tx_byte_index};
+								usart_tx_data <= data_read[15:8];
+								//usart_tx_data <= {address[5:0], tx_byte_index};
 								tx_byte_index <= 2;
 								uart_tx_send <= 1;
 							end
 							2: begin
-								//usart_tx_data <= {6'b0,data_read[17:16]};
-								usart_tx_data <= {address[5:0], tx_byte_index};
+								usart_tx_data <= {6'b0,data_read[17:16]};
+								//usart_tx_data <= {address[5:0], tx_byte_index};
 								tx_byte_index <= 0;
 								uart_tx_send <= 1;
 								
@@ -173,7 +172,6 @@ begin
 								size <= size-1'd1;
 							end
 							endcase
-							leds <= {address[5:0], tx_byte_index}; //debug
 						end
 						else
 						begin

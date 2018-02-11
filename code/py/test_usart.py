@@ -54,23 +54,19 @@ def sendWriteDataMemory(address, memoryContent):
 		data.append(db[1])
 		data.append(db[2])
 
-	print(data)
-
 	ser.write(data)
 
 def sendReadDataMemory(address, size):
 	command = COMMAND_READ_DATA_MEMORY
 	data = struct.pack("=BHH", command, address, size)
 	ser.write(data)
-	received_size = 0
-	while(received_size<size*3):
-		data = ser.read()
-
-		for b in data:
-			i = int(b)
-			print(hex(i), i%4, i//4, end="")
-		print("")
-		time.sleep(0.1)
+	data = ser.read(size*3)
+	assert(len(data)==size*3)
+	out = []
+	for i in range(size):
+		n = data[i*3]+data[i*3+1]*0x100+data[i*3+2]*0x10000;
+		out.append(n)
+	return out
 
 if __name__ == "__main__":
 	if not connect():
@@ -78,53 +74,10 @@ if __name__ == "__main__":
 		exit(1)
 
 
-	#sendLed(0xF0)
-	#memoryContent = [3, 7, 12, 28]
+	#sendLed(0x0F)
+	memoryContent = [3, 7, 12, 28, 255, 12345, 65789, 102302]
 	#sendWriteDataMemory(0, memoryContent)
 
-	sendReadDataMemory(7,4)
-
-	'''
-	data = bytearray()
-	data.append(0)
-	ser.write(data)
-	time.sleep(0.2)
-	'''
-
-	'''	
-	for i in range(256):
-		data = bytearray()
-		data.append(i)
-		ser.write(data)
-		time.sleep(1)
-	'''
+	print(sendReadDataMemory(0, 20))
 	
-	
-	'''
-	for i in range(255):
-		data = bytearray()
-		data.append(i)
-		print(data, end="")
-		ser.write(data)
-		time.sleep(0.1)
-		data = ser.read()
-		print(data)
-	'''
-	
-	'''
-	is_empty = False
-	while True:
-		line = ser.readline()
-		if len(line)==0:
-			is_empty = True
-			print(".", end='')
-			sys.stdout.flush()
-			continue
-
-		if is_empty:
-			print("")
-		is_empty = False
-		value = line.decode('latin1')[:-1]
-		print(datetime.datetime.now(), " : ", value)
-	'''
 	pass
