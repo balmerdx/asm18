@@ -59,6 +59,8 @@ def buildVerilog(generateVcd=False):
 		command.append(join("code", source))
 	for source in sourceTb:
 		command.append(source)
+
+	command.append("-DPROCESSOR_DEBUG_INTERFACE")
 		
 	print("Build verilog files...")
 	runCommand(command)
@@ -111,13 +113,12 @@ def test(asmName):
 	fileExist(asmNameAbs)
 		
 	stateName = os.path.splitext(asmNameAbs)[0]+".state"
-	fileExist(stateName)
 	
 	assembleAsm18(asmNameAbs)
 	fileExist(codeHex)
 	runSimulation()
 	fileExist(currentState)
-	
+	fileExist(stateName)
 	compareFiles(stateName, currentState)
 	
 	print("Test success `"+asmName+"`")

@@ -1,1 +1,1 @@
-gtkwave py/wout.vcd
+gtkwave intermediate/wout.vcd

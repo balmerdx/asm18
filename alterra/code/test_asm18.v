@@ -7,6 +7,8 @@ module test_asm18(
 	input key_87
 );
 
+localparam WORD_SIZE = 18;
+
 logic [17:0] data_address_a = 0;
 logic [17:0] data_address_b = 0;
 logic [17:0] data_write_a = 0;
@@ -25,6 +27,14 @@ wire [17:0] code_read_b;
 logic code_wren_a = 0;
 logic code_wren_b;
 
+logic processor_reset = 1;
+logic wait_for_continue;
+logic wait_continue_execution = 0;
+
+logic debug_get_param = 0;
+logic [3:0] debug_reg_addr = 0;
+logic [(WORD_SIZE-1):0] debug_data_out;
+
 uart_controller uart_controller0(
 	.clk_50M(clk_50M),
 	.uart_rx_pin(uart_rx_pin),
@@ -37,7 +47,13 @@ uart_controller uart_controller0(
 	.code_address(code_address_b),
 	.code_read(code_read_b),
 	.code_write(code_write_b),
-	.code_wren(code_wren_b)
+	.code_wren(code_wren_b),
+	.processor_reset(processor_reset),
+	.wait_for_continue(wait_for_continue),
+	.wait_continue_execution(wait_continue_execution),
+	.debug_get_param(debug_get_param),
+	.debug_reg_addr(debug_reg_addr),
+	.debug_data_out(debug_data_out)
 );
 
 mem1k  mem1k_data(
@@ -63,5 +79,29 @@ mem1k  mem1k_code(
 	.q_a(code_read_a),
 	.q_b(code_read_b)
 );
+
+processor #(.ADDR_SIZE(WORD_SIZE), .WORD_SIZE(WORD_SIZE))
+		processor18(
+		.clock(clk_50M),
+		.reset(processor_reset),
+	
+		//Интерфейс для чтения программы
+		.code_addr(code_address_a),
+		.code_word(code_read_a),
+		//Интерфейс для чтения данных
+		.memory_write_enable(data_wren_a),
+		.memory_addr(data_address_a),
+		.memory_in(data_write_a),
+		.memory_out(data_read_a),
+		//Интерфейс для ожидания внешних данных
+		.wait_for_continue(wait_for_continue),
+		.wait_continue_execution(wait_continue_execution),
+		
+		//Debug
+		.debug_get_param(debug_get_param),
+		.debug_reg_addr(debug_reg_addr),
+		.debug_data_out(debug_data_out)
+	);
+
 
 endmodule

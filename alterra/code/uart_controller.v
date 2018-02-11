@@ -1,20 +1,29 @@
 //Send/receive uart 3 byte with speed 500 kbps
 
-module uart_controller(
+module uart_controller
+	#(parameter integer WORD_SIZE = 18)
+	(
 	input clk_50M,
 	input uart_rx_pin,
 	output reg uart_tx_pin,
 	output reg [7:0] ledout_pins,
 	//data memory
 	output logic [15:0] data_address,
-	input [17:0] data_read,
-	output reg [17:0] data_write,
+	input [(WORD_SIZE-1):0] data_read,
+	output reg [(WORD_SIZE-1):0] data_write,
 	output reg data_wren,
 	//code memory
 	output logic [15:0] code_address,
-	input [17:0] code_read,
-	output reg [17:0] code_write,
-	output reg code_wren
+	input [(WORD_SIZE-1):0] code_read,
+	output reg [(WORD_SIZE-1):0] code_write,
+	output reg code_wren,
+	//processor communication
+	output processor_reset,
+	input wait_for_continue,
+	output reg wait_continue_execution,
+	output reg debug_get_param,
+	output reg [3:0] debug_reg_addr,
+	input [(WORD_SIZE-1):0] debug_data_out
 	);
 
 localparam UART_CLKS_PER_BIT = 100; //500 kbps
@@ -24,6 +33,8 @@ localparam COMMAND_WRITE_DATA_MEMORY = 1;
 localparam COMMAND_READ_DATA_MEMORY = 2;
 localparam COMMAND_WRITE_CODE_MEMORY = 3;
 localparam COMMAND_READ_CODE_MEMORY = 4;
+localparam COMMAND_SET_RESET = 5;
+localparam COMMAND_READ_REGISTERS = 6;
 
 logic [7:0] leds = 0;
 assign ledout_pins = ~leds;
@@ -65,8 +76,16 @@ initial code_wren = 0;
 assign code_address = address;
 assign code_write = data_rx;
 
+initial processor_reset = 1;
+initial wait_continue_execution = 0;
+initial debug_get_param = 0;
+
+assign debug_reg_addr = address[3:0];
+
 wire [17:0] data_code_read;
-assign data_code_read = command==COMMAND_READ_DATA_MEMORY?data_read:code_read;
+assign data_code_read = (command==COMMAND_READ_REGISTERS)?debug_data_out:
+			((command==COMMAND_READ_DATA_MEMORY)?data_read:code_read);
+assign debug_get_param = (command==COMMAND_READ_REGISTERS)?1'd1:1'd0;
 
 always @ ( posedge clk_50M )
 begin
@@ -163,7 +182,9 @@ begin
 						rx_state <= RX_COMMAND;
 					end
 				end
-			COMMAND_READ_DATA_MEMORY, COMMAND_READ_CODE_MEMORY: begin
+			COMMAND_READ_DATA_MEMORY,
+			COMMAND_READ_CODE_MEMORY,
+			COMMAND_READ_REGISTERS: begin
 					if(uart_tx_active==0 && uart_tx_send==0)
 					begin
 						if(size>0)
@@ -171,19 +192,16 @@ begin
 							case(tx_byte_index)
 							0: begin
 								usart_tx_data <= data_code_read[7:0];
-								//usart_tx_data <= {address[5:0], tx_byte_index};
 								tx_byte_index <= 1;
 								uart_tx_send <= 1;
 							end
 							1: begin
 								usart_tx_data <= data_code_read[15:8];
-								//usart_tx_data <= {address[5:0], tx_byte_index};
 								tx_byte_index <= 2;
 								uart_tx_send <= 1;
 							end
 							2: begin
 								usart_tx_data <= {6'b0, data_code_read[17:16]};
-								//usart_tx_data <= {address[5:0], tx_byte_index};
 								tx_byte_index <= 0;
 								uart_tx_send <= 1;
 								
@@ -198,6 +216,10 @@ begin
 							rx_state <= RX_COMMAND;
 						end
 					end
+				end
+			COMMAND_SET_RESET : begin
+				processor_reset <= size[0];
+				rx_state <= RX_COMMAND;
 				end
 			endcase
 		end

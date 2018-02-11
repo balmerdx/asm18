@@ -312,9 +312,21 @@ https://www.nandland.com/vhdl/modules/module-uart-serial-port-rs232.html
 	3 - write to code memory. --ok
 	4 - read code memory. --ok
 
-- стереть summator.v
+- стереть summator.v --ok
 
-- прикрутить процессор
-	- скомпилировать
-	- команда reset (on/off)
-	- команда Read registers
+- проверить PROCESSOR_DEBUG_INTERFACE --ok
+
+
+- прикрутить процессор  --ok
+	- скомпилировать --ok
+	- команда reset (on/off) --ok
+	- команда Read registers --ok
+
+- первый тест 
+	mov.asm18
+	почемуто ip на 1 больше, чем должен быть
+
+- записать данные тества в файл
+	сравнить с получаемым от iverilog
+
+- приделать hardware multiplier

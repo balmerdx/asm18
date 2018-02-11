@@ -27,6 +27,12 @@ module processor_tb;
 	wire [(WORD_SIZE-1):0] data_din;
 	wire [(WORD_SIZE-1):0] data_dout;
 
+`ifdef PROCESSOR_DEBUG_INTERFACE
+	logic debug_get_param = 0;
+	logic [3:0] debug_reg_addr;
+	logic [(WORD_SIZE-1):0] debug_data_out;
+`endif
+
 	task print_state;
 		integer i;
 		integer f;
@@ -34,11 +40,60 @@ module processor_tb;
 		$fwrite(f,"registers\n");
 		for (i = 0; i < 8; i = i +1)
 			$fwrite(f,"r[%0d] = %h\n", i, processor18.registers.regs[i]);
+		$fwrite(f,"ip = %h\n", processor18.ip);
 		$fwrite(f,"memory\n");
 		for (i = 0; i < MEM_SIZE; i = i +1)
 			$fwrite(f,"%h\n", data_memory.mem[i]);
 		$fclose(f);
 	endtask
+
+`ifdef PROCESSOR_DEBUG_INTERFACE
+	task print_debug_interface;
+		integer i;
+		integer f;
+		f = $fopen("intermediate/debug.state", "w");
+		debug_get_param = 1;
+		for (i = 0; i < 8; i = i +1)
+		begin
+			debug_reg_addr = i;
+			#2;
+			$fwrite(f,"r[%0d] = %h\n", i, debug_data_out);
+		end
+
+		debug_reg_addr = 8;
+		#2;
+		$fwrite(f,"ip = %h\n", debug_data_out);
+		$fclose(f);
+		debug_get_param = 0;
+	endtask
+
+	task check_debug_interface;
+		integer i;
+		debug_get_param = 1;
+		for (i = 0; i < 8; i = i +1)
+		begin
+			debug_reg_addr = i;
+			#2;
+			if(debug_data_out != processor18.registers.regs[i])
+			begin
+				$display("r[%0d] not equal. Real=%h debug=%h",
+						i, processor18.registers.regs[i], debug_data_out);
+				$finish(1);
+			end
+		end
+
+		debug_reg_addr = 8;
+		#2;
+		if(debug_data_out != processor18.ip)
+		begin
+			$display("ip not equal. ip=%h ipd=%h", processor18.ip, debug_data_out);
+			$finish(1);
+		end
+		debug_get_param = 0;
+		
+		$display("Check debug interface completed.");
+	endtask
+`endif
 
 	initial
 	begin
@@ -80,6 +135,11 @@ module processor_tb;
 		//#2 wait_continue_execution = 1;
 		//#2 wait_continue_execution = 0;
 		print_state();
+
+`ifdef PROCESSOR_DEBUG_INTERFACE
+		//print_debug_interface();
+		check_debug_interface();
+`endif
 		
 		#2 $finish;
 	end
@@ -113,6 +173,12 @@ module processor_tb;
 		//Интерфейс для ожидания внешних данных
 		.wait_for_continue(wait_for_continue),
 		.wait_continue_execution(wait_continue_execution)
+`ifdef PROCESSOR_DEBUG_INTERFACE
+		,
+		.debug_get_param(debug_get_param),
+		.debug_reg_addr(debug_reg_addr),
+		.debug_data_out(debug_data_out)
+`endif
 	);
 
 endmodule//processor_tb

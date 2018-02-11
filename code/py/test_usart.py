@@ -18,6 +18,8 @@ COMMAND_WRITE_DATA_MEMORY = 1
 COMMAND_READ_DATA_MEMORY = 2
 COMMAND_WRITE_CODE_MEMORY = 3
 COMMAND_READ_CODE_MEMORY = 4
+COMMAND_SET_RESET = 5
+COMMAND_READ_REGISTERS = 6
 
 
 ser = None
@@ -38,6 +40,21 @@ def connect():
 
 def close():
 	ser.close()
+
+
+def readProgram(filename):
+	fs = open(filename, "r")
+	if not fs:
+		return None
+	lines = fs.readlines()
+	fs.close()
+
+	arr = []
+	for line in lines:
+		arr.append(int(line, 16))
+
+	return arr
+
 
 def sendLed(leds):
 	command = COMMAND_SET_LED
@@ -80,17 +97,45 @@ def sendWriteCodeMemory(address, memoryContent):
 def sendReadCodeMemory(address, size):
 	return sendReadMemory(COMMAND_READ_CODE_MEMORY, address, size)
 
+def sendReadRegisters():
+	address = 0
+	size = 9
+	return sendReadMemory(COMMAND_READ_REGISTERS, address, size)
+
+def sendReset(resetOn):
+	if resetOn:
+		size = 1
+	else:
+		size = 0
+	data = struct.pack("=BHH", COMMAND_SET_RESET, 0, size)
+	ser.write(data)
+
+def sendProgram(filename):
+	prog = readProgram(filename)
+	print(prog)
+	if not prog:
+		print("Cannot read program `"+filename+"`")
+	sendWriteCodeMemory(0, prog)
+
 if __name__ == "__main__":
 	if not connect():
 		print("Cannot connect to serial port")
 		exit(1)
 
+	sendReset(1)
+	sendProgram("../intermediate/code.hex")
+	print("code=", sendReadCodeMemory(0, 64))
+	sendReset(0)
+	time.sleep(0.2)
+	print("data=", sendReadDataMemory(0, 20))
+	print("reg=", sendReadRegisters())
 
 	#sendLed(0x0F)
 	#sendWriteDataMemory(0, [3, 7, 12, 28, 255, 12345, 65789, 102302])
 	#sendWriteCodeMemory(0, [1024, 1000, 100, 50, 25])
 
-	print("data=", sendReadDataMemory(0, 20))
-	print("code=", sendReadCodeMemory(0, 20))
+	#print("data=", sendReadDataMemory(0, 20))
+	#print("code=", sendReadCodeMemory(0, 20))
+	#print("reg=", sendReadRegisters())
 	
 	pass
