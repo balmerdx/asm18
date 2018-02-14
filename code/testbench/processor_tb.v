@@ -39,7 +39,7 @@ module processor_tb;
 		f = $fopen("intermediate/current.state", "w");
 		$fwrite(f,"registers\n");
 		for (i = 0; i < 8; i = i +1)
-			$fwrite(f,"r[%0d] = %h\n", i, processor18.registers.regs[i]);
+			$fwrite(f,"r%0d = %h\n", i, processor18.registers.regs[i]);
 		$fwrite(f,"ip = %h\n", processor18.ip);
 		$fwrite(f,"memory\n");
 		for (i = 0; i < MEM_SIZE; i = i +1)
@@ -57,7 +57,7 @@ module processor_tb;
 		begin
 			debug_reg_addr = i;
 			#2;
-			$fwrite(f,"r[%0d] = %h\n", i, debug_data_out);
+			$fwrite(f,"r%0d = %h\n", i, debug_data_out);
 		end
 
 		debug_reg_addr = 8;

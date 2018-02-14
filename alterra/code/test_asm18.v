@@ -63,7 +63,7 @@ uart_controller uart_controller0(
 	.debug_data_out(debug_data_out)
 );
 
-mem1k  mem1k_data(
+mem_async  mem1k_data(
 	.address_a(data_address_a),
 	.address_b(data_address_b),
 	.clock(clk_25M),
@@ -75,7 +75,7 @@ mem1k  mem1k_data(
 	.q_b(data_read_b)
 );
 
-mem1k  mem1k_code(
+mem_async  mem1k_code(
 	.address_a(code_address_a),
 	.address_b(code_address_b),
 	.clock(clk_25M),

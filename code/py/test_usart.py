@@ -131,7 +131,7 @@ def sendStep(count):
 
 def sendProgram(filename):
 	prog = readProgram(filename)
-	print(prog)
+	#print(prog)
 	if not prog:
 		print("Cannot read program `"+filename+"`")
 	sendWriteCodeMemory(0, prog)
@@ -140,34 +140,46 @@ def printReg(reg):
 	print("reg=", reg[0:8])
 	print("ip=", reg[8])
 
+def saveState(filename):
+	mem = sendReadDataMemory(0, 64)
+	reg = sendReadRegisters()
+	f = open(filename, "wt")
+	print("registers", file=f);
+	for i in range(8):
+		print("r{0} = {1:05x}".format(i, reg[i]), file=f);
+	print("ip = {:05x}".format(reg[8]), file=f);
+	print("memory", file=f);
+	for m in mem:
+		print("{:05x}".format(m), file=f);
+	f.close()
+
+
 if __name__ == "__main__":
 	if not connect():
 		print("Cannot connect to serial port")
 		exit(1)
 
-	'''
-	sendReset(1, 0)
+	sendReset(resetOn=1, debugGetParamOn=0)
+	sendClearDataMemory(0, 511)
+	sendClearCodeMemory(0, 511)
 	sendProgram("../intermediate/code.hex")
-	print("code=", sendReadCodeMemory(0, 64))
-	sendReset(0, 1)
-	sendStep(1)
-	sendStep(1)
-	sendStep(1)
-	sendStep(1)
-	sendStep(1)
-	time.sleep(0.2)
-	print("data=", sendReadDataMemory(0, 20))
-	printReg(sendReadRegisters())
-	'''
+	sendReset(resetOn=0, debugGetParamOn=0)
+	time.sleep(0.01)
 
+	saveState("state.txt")
+	print("code=", sendReadCodeMemory(0, 20))
+
+
+	'''
 	sendReset(1, 0)
 	sendWriteDataMemory(0, [101,102,103,104,105,106,107,108,109,110,111,112,113,114,115])
 	sendWriteCodeMemory(0, [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15])
+	saveState("state.txt")
 	print("data=", sendReadDataMemory(0, 20))
 	print("code=", sendReadCodeMemory(0, 20))
 	sendClearDataMemory(0, 511)
 	sendClearCodeMemory(0, 511)
 	print("data=", sendReadDataMemory(0, 20))
 	print("code=", sendReadCodeMemory(0, 20))
-	
+	'''
 	pass
