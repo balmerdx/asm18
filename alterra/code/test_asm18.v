@@ -9,6 +9,8 @@ module test_asm18(
 
 localparam WORD_SIZE = 18;
 
+wire clk_25M;
+
 logic [17:0] data_address_a = 0;
 logic [17:0] data_address_b = 0;
 logic [17:0] data_write_a = 0;
@@ -35,8 +37,13 @@ logic debug_get_param = 0;
 logic [3:0] debug_reg_addr = 0;
 logic [(WORD_SIZE-1):0] debug_data_out;
 
+slow_pll pll25mhz(
+	clk_50M,
+	clk_25M);
+
+
 uart_controller uart_controller0(
-	.clk_50M(clk_50M),
+	.clock(clk_25M),
 	.uart_rx_pin(uart_rx_pin),
 	.uart_tx_pin(uart_tx_pin),
 	.ledout_pins(ledout),
@@ -59,7 +66,7 @@ uart_controller uart_controller0(
 mem1k  mem1k_data(
 	.address_a(data_address_a),
 	.address_b(data_address_b),
-	.clock(clk_50M),
+	.clock(clk_25M),
 	.data_a(data_write_a),
 	.data_b(data_write_b),
 	.wren_a(data_wren_a),
@@ -71,7 +78,7 @@ mem1k  mem1k_data(
 mem1k  mem1k_code(
 	.address_a(code_address_a),
 	.address_b(code_address_b),
-	.clock(clk_50M),
+	.clock(clk_25M),
 	.data_a(code_write_a),
 	.data_b(code_write_b),
 	.wren_a(code_wren_a),
@@ -82,7 +89,7 @@ mem1k  mem1k_code(
 
 processor #(.ADDR_SIZE(WORD_SIZE), .WORD_SIZE(WORD_SIZE))
 		processor18(
-		.clock(clk_50M),
+		.clock(clk_25M),
 		.reset(processor_reset),
 	
 		//Интерфейс для чтения программы

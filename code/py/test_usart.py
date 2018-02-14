@@ -20,6 +20,7 @@ COMMAND_WRITE_CODE_MEMORY = 3
 COMMAND_READ_CODE_MEMORY = 4
 COMMAND_SET_RESET = 5
 COMMAND_READ_REGISTERS = 6
+COMMAND_STEP = 7
 
 
 ser = None
@@ -55,13 +56,15 @@ def readProgram(filename):
 
 	return arr
 
+def sendCommand(command, address, size):
+	data = struct.pack("=BHH", command, address, size)
+	ser.write(data)
 
 def sendLed(leds):
 	command = COMMAND_SET_LED
 	address = 0
 	size = leds
-	data = struct.pack("=BHH", command, address, size)
-	ser.write(data)
+	sendCommand(command, address, size)
 
 def sendWriteMemory(command, address, memoryContent):
 	size = len(memoryContent)
@@ -75,8 +78,8 @@ def sendWriteMemory(command, address, memoryContent):
 	ser.write(data)
 
 def sendReadMemory(command, address, size):
-	data = struct.pack("=BHH", command, address, size)
-	ser.write(data)
+	sendCommand(command, address, size)
+
 	data = ser.read(size*3)
 	assert(len(data)==size*3)
 	out = []
@@ -102,13 +105,19 @@ def sendReadRegisters():
 	size = 9
 	return sendReadMemory(COMMAND_READ_REGISTERS, address, size)
 
-def sendReset(resetOn):
+def sendReset(resetOn, debugGetParamOn):
+	addr = 0
+	size = 0
 	if resetOn:
-		size = 1
-	else:
-		size = 0
-	data = struct.pack("=BHH", COMMAND_SET_RESET, 0, size)
-	ser.write(data)
+		addr += 1
+	if debugGetParamOn:
+		addr += 2
+	sendCommand(COMMAND_SET_RESET, addr, size)
+
+def sendStep(count):
+	#запускаем процессор на несколько шагов
+	sendCommand(COMMAND_STEP, 0, count)
+	
 
 def sendProgram(filename):
 	prog = readProgram(filename)
@@ -117,25 +126,26 @@ def sendProgram(filename):
 		print("Cannot read program `"+filename+"`")
 	sendWriteCodeMemory(0, prog)
 
+def printReg(reg):
+	print("reg=", reg[0:8])
+	print("ip=", reg[8])
+
 if __name__ == "__main__":
 	if not connect():
 		print("Cannot connect to serial port")
 		exit(1)
 
-	sendReset(1)
+	sendReset(1, 0)
 	sendProgram("../intermediate/code.hex")
 	print("code=", sendReadCodeMemory(0, 64))
-	sendReset(0)
+	sendReset(0, 1)
+	sendStep(1)
+	sendStep(1)
+	sendStep(1)
+	sendStep(1)
+	sendStep(1)
 	time.sleep(0.2)
 	print("data=", sendReadDataMemory(0, 20))
-	print("reg=", sendReadRegisters())
-
-	#sendLed(0x0F)
-	#sendWriteDataMemory(0, [3, 7, 12, 28, 255, 12345, 65789, 102302])
-	#sendWriteCodeMemory(0, [1024, 1000, 100, 50, 25])
-
-	#print("data=", sendReadDataMemory(0, 20))
-	#print("code=", sendReadCodeMemory(0, 20))
-	#print("reg=", sendReadRegisters())
+	printReg(sendReadRegisters())
 	
 	pass

@@ -5,3 +5,7 @@ AsmProcessor18/VC2013/AsmProcessor18.opensdf
 AsmProcessor18/VC2013/AsmProcessor18.sdf
 AsmProcessor18/qt/AsmProcessor18-Debug
 AsmProcessor18/qt/AsmProcessor18-Release
+
+alterra/greybox_tmp
+alterra/test_asm18.out.sdc
+alterra/test_asm18.qws

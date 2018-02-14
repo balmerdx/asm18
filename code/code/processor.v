@@ -1,7 +1,9 @@
 `ifdef QUARTUS
 `define ALU_MODULE_REF alu
+`define wire_logic wire
 `else
 `define ALU_MODULE_REF alu0
+`define wire_logic logic
 `endif
 
 module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE = 18)
@@ -51,14 +53,14 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 	logic wait_logic;
 	assign wait_for_continue = wait_logic;
 	
-	logic [3:0] reg_read_addr0;
-	logic [(WORD_SIZE-1):0] reg_read_data0;
-	logic [3:0] reg_read_addr1;
-	logic [(WORD_SIZE-1):0] reg_read_data1;
-	logic reg_write_enable;
-	logic [3:0] reg_write_addr;
-	logic [(WORD_SIZE-1):0] reg_write_data;
-	logic [(WORD_SIZE-1):0] alu_write_data;
+	`wire_logic [3:0] reg_read_addr0;
+	`wire_logic [(WORD_SIZE-1):0] reg_read_data0;
+	`wire_logic [3:0] reg_read_addr1;
+	`wire_logic [(WORD_SIZE-1):0] reg_read_data1;
+	`wire_logic reg_write_enable;
+	`wire_logic [3:0] reg_write_addr;
+	`wire_logic [(WORD_SIZE-1):0] reg_write_data;
+	`wire_logic [(WORD_SIZE-1):0] alu_write_data;
 	
 	//reg_data_from_memory==1 - перемещаем данные из memory в регистр
 	logic reg_data_from_memory;
@@ -266,7 +268,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			alu_operation = code_word[3:0];
 			reg_read_addr0 = code_rx;
 			reg_read_addr1 = code_ry;
-			reg_write_addr = reg_read_addr0;
+			reg_write_addr = code_rx;
 			reg_write_enable = 1;
 		end
 		else
@@ -275,7 +277,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			// rx = (rx*ry)>>shift
 			reg_read_addr0 = code_rx;
 			reg_read_addr1 = code_ry;
-			reg_write_addr = reg_read_addr0;
+			reg_write_addr = code_rx;
 			reg_data_from_mullxx = 1;
 			reg_write_enable = 1;
 		end
@@ -336,19 +338,9 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			ip <= {4'b0000, code_word[13:0]};
 		else
 		if(write_alu_to_ip)
-			ip <= reg_write_data;//alu_write_data;
+			ip <= reg_write_data;
 		else
 			ip <= ip_plus_one;
 	end
 
-endmodule
-
-module adder8 #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE = 18, parameter integer MEM_SIZE = 1024)
-	(
-		output wire unsigned [(WORD_SIZE-1):0] resout,
-		input wire unsigned [(WORD_SIZE-1):0] arg1,
-		input wire signed [7:0] arg2
-	);
-	
-	assign resout = arg1 + arg2;
 endmodule
