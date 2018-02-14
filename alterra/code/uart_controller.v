@@ -34,9 +34,11 @@ localparam COMMAND_WRITE_DATA_MEMORY = 1;
 localparam COMMAND_READ_DATA_MEMORY = 2;
 localparam COMMAND_WRITE_CODE_MEMORY = 3;
 localparam COMMAND_READ_CODE_MEMORY = 4;
-localparam COMMAND_SET_RESET = 5;
-localparam COMMAND_READ_REGISTERS = 6;
-localparam COMMAND_STEP = 7; //Запускает процессор на несколько шагов size, потом останавливает его
+localparam COMMAND_CLEAR_DATA_MEMORY = 5;
+localparam COMMAND_CLEAR_CODE_MEMORY = 6;
+localparam COMMAND_SET_RESET = 7;
+localparam COMMAND_READ_REGISTERS = 8;
+localparam COMMAND_STEP = 9; //Запускает процессор на несколько шагов size, потом останавливает его
 
 logic [7:0] leds = 0;
 assign ledout_pins = ~leds;
@@ -244,6 +246,30 @@ begin
 					else
 					begin
 						debug_get_param <= 1;
+						rx_state <= RX_COMMAND;
+					end
+				end
+			COMMAND_CLEAR_DATA_MEMORY,
+			COMMAND_CLEAR_CODE_MEMORY : begin
+					if(data_wren || code_wren)
+					begin
+						//increment address on next quant
+						address <= address + 1'd1;
+					end
+					else
+					begin
+						data_rx <= 0;
+						size <= size-1'd1;
+						
+						if(command==COMMAND_CLEAR_DATA_MEMORY)
+							data_wren <= 1;
+						else
+							code_wren <= 1;
+					end
+					
+						
+					if(size==0)
+					begin
 						rx_state <= RX_COMMAND;
 					end
 				end
