@@ -60,7 +60,7 @@ wire uart_tx_active;
 wire uart_tx_done;
 logic [7:0] usart_tx_data;
 
-logic [7:0] command;
+logic [3:0] command;
 
 logic address_index;
 logic size_index;
@@ -102,7 +102,7 @@ begin
 		case(rx_state)
 		RX_COMMAND: begin
 				rx_state <= RX_ADDRESS;
-				command <= uart_rx_byte;
+				command <= uart_rx_byte[3:0];
 				address_index <= 0;
 				size_index <= 0;
 				rx_byte_index <= 0;

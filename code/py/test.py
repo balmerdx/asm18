@@ -1,3 +1,4 @@
+#!/usr/bin/env /usr/bin/python3.5
 '''
 Скрипт для:
  - компиляции verilog файлов
@@ -13,11 +14,17 @@ import os
 import os.path
 from os.path import abspath, normpath, join
 
+from tests_list import tests_list
+import test_usart
+
 intermediateDir = abspath("intermediate")
 voutFile = join(intermediateDir, "wout.vvp")
 vcdFile = join(intermediateDir, "wout.vcd")
 codeHex = join(intermediateDir, "code.hex")
 currentState = join(intermediateDir, "current.state")
+
+runOnHardware = False
+alltests = False
 
 if sys.platform=="linux":
 	assemblerExecutable = abspath("../AsmProcessor18/qt/AsmProcessor18-Debug/AsmProcessor18")
@@ -39,7 +46,8 @@ sourceTb = ["testbench/processor_tb.v"]
 
 def runCommand(command):
 	result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-	print(result.stdout, result.stderr)
+	if not alltests or result.returncode!=0:
+		print(result.stdout, result.stderr)
 	if result.returncode!=0:
 		exit(result.returncode)
 		
@@ -67,13 +75,13 @@ def buildVerilog(generateVcd=False):
 	pass
 
 def assembleAsm18(asmName):
-	print("Compile `"+asmName+"`")
+	if not alltests: print("Compile `"+asmName+"`")
 	command = [assemblerExecutable, asmName, "-o", "intermediate/code.hex"]
 	runCommand(command)
 	pass
 
 def runSimulation():
-	print("Run simulation...")
+	if not alltests: print("Run simulation...")
 	if not os.path.isfile(codeHex):
 		print("File not found `"+codeHex+"`")
 		exit(1)
@@ -82,6 +90,19 @@ def runSimulation():
 	command = ["vvp", voutFile]
 	runCommand(command)
 	pass
+
+def runProgram():
+	global runOnHardware
+	if runOnHardware:
+		test_usart.runProgram()
+	else:
+		runSimulation()
+	pass
+
+def removeEndline(line):
+	line = line.strip('\n')
+	line = line.strip('\r')
+	return line
 	
 def compareFiles(stateName, currentState):
 	fs = open(stateName, "r")
@@ -95,9 +116,18 @@ def compareFiles(stateName, currentState):
 	minlines = min(len(stateLines), len(currentLines))
 	
 	for i in range(minlines):
-		if stateLines[i]!=currentLines[i]:
+		sl = removeEndline(stateLines[i])
+		cl = removeEndline(currentLines[i])
+		if sl=='xxxxx':
+			sl = '00000'
+		if cl=='xxxxx':
+			cl = '00000'
+
+		if sl!=cl:
 			print("Compare `"+stateName+"` and `"+currentState+"`")
 			print("Lines not matched line="+str(i+1))
+			print(sl)
+			print(cl)
 			exit(1)
 			
 	if len(stateLines)!=len(currentLines):
@@ -108,7 +138,7 @@ def compareFiles(stateName, currentState):
 	pass
 
 def test(asmName):
-	print("Start test `"+asmName+"`")
+	if not alltests: print("Start test `"+asmName+"`")
 	asmNameAbs = abspath(asmName)
 	fileExist(asmNameAbs)
 		
@@ -116,15 +146,18 @@ def test(asmName):
 	
 	assembleAsm18(asmNameAbs)
 	fileExist(codeHex)
-	runSimulation()
+	runProgram()
 	fileExist(currentState)
 	fileExist(stateName)
 	compareFiles(stateName, currentState)
 	
-	print("Test success `"+asmName+"`")
+	print("Test `"+asmName+"` -success")
 	pass
 
 def main():
+	global runOnHardware
+	global alltests
+
 	if len(sys.argv)==1:
 		print("Compile and run testbench, call from parent directory")
 		print("Example: python testbench/test.py build");
@@ -132,8 +165,21 @@ def main():
 		print("compile filename - compile asm18 file")
 		print("run - run simulation")
 		print("test filename - start testbench and check result")
+		print("alltests - start all testbench in Icarus Verilog")
+		print("Add at end flag -hard - run on Cyclone IV, else run on Icarus Verilog")
 		return
-		
+
+	for i in range(2, len(sys.argv)):
+		if sys.argv[i]=="-hard":
+			print("Run tests in hardware")
+			runOnHardware = True
+		pass
+
+	if runOnHardware:
+		if not test_usart.connect():
+			print("Cannot connect to serial port")
+			exit(1)
+
 	if "build"==sys.argv[1]:
 		buildVerilog(generateVcd=True)
 		return
@@ -141,12 +187,21 @@ def main():
 		assembleAsm18(sys.argv[2])
 		return
 	if "run"==sys.argv[1]:
-		runSimulation()
+		runProgram()
 		return
 	if "test"==sys.argv[1]:
 		buildVerilog(generateVcd=False)
 		test(sys.argv[2])
 		return
+
+	if "alltests"==sys.argv[1]:
+		alltests = True
+		buildVerilog(generateVcd=False)
+		for cur_test in tests_list:
+			test(cur_test)
+
+		return
+
 	pass
 	
 if __name__ == '__main__':

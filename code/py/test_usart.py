@@ -153,6 +153,16 @@ def saveState(filename):
 		print("{:05x}".format(m), file=f);
 	f.close()
 
+def runProgram():
+	time.sleep(1e-3)
+	sendReset(resetOn=1, debugGetParamOn=0)
+	sendClearDataMemory(0, 511)
+	sendClearCodeMemory(0, 511)
+	sendProgram("intermediate/code.hex")
+	sendReset(resetOn=0, debugGetParamOn=0)
+	time.sleep(0.01)
+
+	saveState("intermediate/current.state")
 
 if __name__ == "__main__":
 	if not connect():
@@ -163,11 +173,13 @@ if __name__ == "__main__":
 	sendClearDataMemory(0, 511)
 	sendClearCodeMemory(0, 511)
 	sendProgram("../intermediate/code.hex")
+	#sendReset(resetOn=0, debugGetParamOn=1)
+	#sendStep(2)
 	sendReset(resetOn=0, debugGetParamOn=0)
 	time.sleep(0.01)
 
 	saveState("state.txt")
-	print("code=", sendReadCodeMemory(0, 20))
+	#print("code=", sendReadCodeMemory(0, 20))
 
 
 	'''

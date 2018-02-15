@@ -20,10 +20,10 @@ wire [17:0] data_read_b;
 logic data_wren_a = 0;
 logic data_wren_b;
 
-logic [17:0] code_address_a = 0;
-logic [17:0] code_address_b = 0;
-logic [17:0] code_write_a = 0;
-logic [17:0] code_write_b;
+wire [17:0] code_address_a;
+wire [17:0] code_address_b;
+wire [17:0] code_write_a = 0;
+wire [17:0] code_write_b;
 wire [17:0] code_read_a;
 wire [17:0] code_read_b;
 logic code_wren_a = 0;

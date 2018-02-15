@@ -9,7 +9,7 @@ module regfile #(parameter integer WORD_SIZE = 18, parameter integer REG_COUNT =
 	input wire [3:0] write_addr,
 	input wire [(WORD_SIZE-1):0] write_data
 	);
-	//Два входных порта и один выходной
+	//Два порта на чтение и один на запись
 	//Регистров всего 8
 	//rx0-rx6 - регистры общего назначения
 	//rx7 - stack pointer (sp)

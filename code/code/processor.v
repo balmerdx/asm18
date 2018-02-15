@@ -53,6 +53,8 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 	logic wait_logic;
 	assign wait_for_continue = wait_logic;
 	
+	logic relaxation_quant = 0;
+	
 	`wire_logic [3:0] reg_read_addr0;
 	`wire_logic [(WORD_SIZE-1):0] reg_read_data0;
 	`wire_logic [3:0] reg_read_addr1;
@@ -188,10 +190,15 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 		select_alu_reg0 = ALU_REG0_IS_REGISTER;
 		select_alu_reg1 = ALU_REG1_IS_REGISTER;
 `ifdef PROCESSOR_DEBUG_INTERFACE
-		if(debug_get_param)
+		if(debug_get_param || relaxation_quant)
 		begin
 			select_alu_reg0 = debug_reg_addr[3]?ALU_REG0_IS_IP:ALU_REG0_IS_REGISTER;
 			reg_read_addr0 = debug_reg_addr[2:0];
+		end
+		else
+`else
+		if(relaxation_quant)
+		begin
 		end
 		else
 `endif
@@ -325,10 +332,14 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 	end
 	else
 	begin
+		//Совсем кривой вариант, замедляем процессор в 2 раза
+		relaxation_quant <= ~relaxation_quant;
+		
 		if(wait_logic
 `ifdef PROCESSOR_DEBUG_INTERFACE
 			|| debug_get_param
 `endif
+			|| relaxation_quant
 		)
 		begin
 			ip <= ip;
