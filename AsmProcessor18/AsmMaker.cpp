@@ -15,6 +15,8 @@ const int BITS_OP1 = 8;
 
 const uint32_t OPCODE_WAIT = (0xA << BITS_TOP);
 
+const int POW18 = 0x40000;
+
 AsmMaker::AsmMaker()
 {
 }
@@ -33,7 +35,7 @@ bool AsmMaker::isValidImm11Top(int number)
 	int bit7 = 128;
 	if (number%bit7)
 		return false;
-	return number >= -1024*128 && number < 1024*128;
+    return number >= -POW18 && number < POW18;
 }
 
 bool AsmMaker::isValidImm14unsigned(int number)
@@ -110,21 +112,26 @@ void AsmMaker::addMovImm18(int reg, int number)
 	assert(isValidReg(reg));
 	assert(isValidImm18(number));
 
-	if (isValidImm11(number))
+    if (isValidImm11(number))
 	{
 		addMovImm11(reg, number);
 		return;
 	}
 
-	if (isValidImm11Top(number))
+    if(number<0)
+    {
+        number = POW18 + number;
+    }
+
+    if (isValidImm11Top(number))
 	{
 		addMovImm11Top(reg, number);
 		return;
 	}
 
 	int top = (number/128)*128;
-	addMovImm11Top(reg, top);
-	int bottom = number - top;
+    int bottom = number - top;
+    addMovImm11Top(reg, top);
 	addAddRegImm8(reg, reg, bottom);
 }
 

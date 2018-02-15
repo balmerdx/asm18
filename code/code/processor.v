@@ -229,7 +229,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			//rx = imm11<<7
 			reg_write_enable = 1;
 			reg_write_addr = code_rx;
-			imm = {code_word[10:0], {7{code_word[10]}}};
+			imm = {code_word[10:0], 7'd0};
 			
 			alu_operation = `ALU_MODULE_REF.ALU_OP_REG1;
 			select_alu_reg1 = ALU_REG1_IS_IMM;

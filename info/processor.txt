@@ -368,4 +368,5 @@ Total PLLs	0 / 2 ( 0 % )
 	0xA wait --ok
 	0x1 rx = imm11 --ok
 	0x0 rx = ry + imm8 --ok
+	0x2 rx = imm11 << 7 --ok
 
