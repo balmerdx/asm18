@@ -1,9 +1,7 @@
 `ifdef QUARTUS
 `define ALU_MODULE_REF alu
-`define wire_logic wire
 `else
 `define ALU_MODULE_REF alu0
-`define wire_logic logic
 `endif
 
 module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE = 18)
@@ -55,14 +53,14 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 	
 	logic relaxation_quant = 0;
 	
-	`wire_logic [3:0] reg_read_addr0;
-	`wire_logic [(WORD_SIZE-1):0] reg_read_data0;
-	`wire_logic [3:0] reg_read_addr1;
-	`wire_logic [(WORD_SIZE-1):0] reg_read_data1;
-	`wire_logic reg_write_enable;
-	`wire_logic [3:0] reg_write_addr;
-	`wire_logic [(WORD_SIZE-1):0] reg_write_data;
-	`wire_logic [(WORD_SIZE-1):0] alu_write_data;
+	logic [3:0] reg_read_addr0;
+	logic [(WORD_SIZE-1):0] reg_read_data0;
+	logic [3:0] reg_read_addr1;
+	logic [(WORD_SIZE-1):0] reg_read_data1;
+	logic reg_write_enable;
+	logic [3:0] reg_write_addr;
+	logic [(WORD_SIZE-1):0] reg_write_data;
+	logic [(WORD_SIZE-1):0] alu_write_data;
 	
 	//reg_data_from_memory==1 - перемещаем данные из memory в регистр
 	logic reg_data_from_memory;

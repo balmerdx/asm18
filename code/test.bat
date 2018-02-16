@@ -1,1 +1,1 @@
-python py/test.py test ../AsmSamples/loop.asm18
+python py/test.py test asm_tests/mem_rw.asm18

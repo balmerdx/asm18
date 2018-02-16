@@ -1,0 +1,75 @@
+registers
+r0 = 03000
+r1 = 04000
+r2 = 00003
+r3 = 00020
+r4 = 00030
+r5 = 00000
+r6 = 00000
+r7 = 00000
+ip = 00009
+memory
+03000
+04000
+00020
+00030
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
+xxxxx
