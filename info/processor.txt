@@ -381,7 +381,7 @@ Total PLLs	0 / 2 ( 0 % )
 - сделать минимум тестов на все инструкции
 	- 0x6 alu --ok
 	- 0x5 if --ok
-	- 0x7 mul
+	- 0x7 mul --ok
 	- 0x8 call
 	- 0x9 return
 
@@ -391,3 +391,26 @@ Total PLLs	0 / 2 ( 0 % )
 - asm в идентификаторах нет поддержки _
 - asm при неверном идентификаторе после goto указывает на goto, а не на него
 	скорее всего проблемма в TAB
+
+
+- заменим
+	0x9 op6 imm8
+		op=0 ip = sp[imm8] //return imm8==0
+
+	на операцию
+	0x9 op3 ry imm8
+		op=0 ip = sp[imm8] //return это ip=sp[0]
+		если читать из других регистров, то это будет goto по относительному адресу
+
+- попытаться привести к варианту  --ok
+	reg_read_addr0 == code_rx
+	reg_read_addr1 == code_ry
+	reg_write_addr == code_rx
+
+до приведения
+	Total logic elements	1,038 / 10,320 ( 10 % )
+	Total registers	320
+
+после приведения
+	Total logic elements	1,023 / 10,320 ( 10 % )
+	Total registers	320

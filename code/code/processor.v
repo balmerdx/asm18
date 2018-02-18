@@ -36,10 +36,10 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 	);
 	
 	localparam logic ALU_REG0_IS_REGISTER = 0;
-	localparam logic ALU_REG0_IS_IP = 1;
+	localparam logic ALU_REG0_IS_IMM = 1;
 	
 	localparam logic ALU_REG1_IS_REGISTER = 0;
-	localparam logic ALU_REG1_IS_IMM = 1;
+	localparam logic ALU_REG1_IS_IP = 1;
 	
 	// instruction pointer
 	reg [(WORD_SIZE-1):0] ip;
@@ -103,8 +103,8 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 	
 	always @(*)
 	begin
-		alu_data0 = (select_alu_reg0==ALU_REG0_IS_REGISTER)?reg_read_data0:ip;
-		alu_data1 = (select_alu_reg1==ALU_REG1_IS_REGISTER)?reg_read_data1:imm;
+		alu_data0 = (select_alu_reg0==ALU_REG0_IS_REGISTER)?reg_read_data0:imm;
+		alu_data1 = (select_alu_reg1==ALU_REG1_IS_REGISTER)?reg_read_data1:ip;
 	end
 	
 	alu #(.WORD_SIZE(WORD_SIZE))
@@ -139,7 +139,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 	assign ip_plus_one = ip + 1'd1;
 	
 	assign memory_addr = alu_write_data;
-	assign memory_in = mem_write_ip_plus_one?ip_plus_one:reg_read_data1;
+	assign memory_in = mem_write_ip_plus_one?ip_plus_one:reg_read_data0;
 	
 	assign reg_write_data = reg_data_from_memory? memory_out : (reg_data_from_mullxx?mulxx_write_data:alu_write_data);
 	
@@ -157,7 +157,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 	assign mulxx_shift = code_word[4:0];
 
 `ifdef PROCESSOR_DEBUG_INTERFACE
-	assign debug_data_out = alu_data0;
+	assign debug_data_out = alu_data1;
 `endif
 	
 	always @(*)
@@ -166,9 +166,9 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 		write_imm14_to_ip = 0;
 		wait_logic = 0;
 		reg_write_enable = 0;
-		reg_write_addr = 0;
-		reg_read_addr0 = 0;
-		reg_read_addr1 = 0;
+		reg_write_addr = code_rx;
+		reg_read_addr0 = code_rx;
+		reg_read_addr1 = code_ry;
 		reg_data_from_memory = 0;
 		reg_data_from_mullxx = 0;
 		mem_write = 0;
@@ -184,8 +184,8 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 `ifdef PROCESSOR_DEBUG_INTERFACE
 		if(debug_get_param)
 		begin
-			select_alu_reg0 = debug_reg_addr[3]?ALU_REG0_IS_IP:ALU_REG0_IS_REGISTER;
-			reg_read_addr0 = debug_reg_addr[2:0];
+			select_alu_reg1 = debug_reg_addr[3]?ALU_REG1_IS_IP:ALU_REG1_IS_REGISTER;
+			reg_read_addr1 = debug_reg_addr[2:0];
 		end
 		else
 `endif
@@ -196,13 +196,12 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 		else
 		if(relaxation_quant==2'd1)
 		begin
-			//read memoty on quant 1
+			//read memory on quant 1
 			if(code_word_top==3)
 			begin
 				//rx = ry[imm8]
-				reg_read_addr0 = code_ry;
 				alu_operation = `ALU_MODULE_REF.ALU_OP_ADD;
-				select_alu_reg1 = ALU_REG1_IS_IMM;
+				select_alu_reg0 = ALU_REG0_IS_IMM;
 			end
 		end
 		else
@@ -210,33 +209,26 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 		begin
 			//rx = ry + imm8
 			reg_write_enable = 1;
-			reg_write_addr = code_rx;
-			reg_read_addr0 = code_ry;
-			
 			alu_operation = `ALU_MODULE_REF.ALU_OP_ADD;
-			select_alu_reg1 = ALU_REG1_IS_IMM;
+			select_alu_reg0 = ALU_REG0_IS_IMM;
 		end
 		else
 		if(code_word_top==1)
 		begin
 			//rx = imm11
 			reg_write_enable = 1;
-			reg_write_addr = code_rx; //rx
 			imm = {{7{code_word[10]}}, code_word[10:0]};
-			
-			alu_operation = `ALU_MODULE_REF.ALU_OP_REG1;
-			select_alu_reg1 = ALU_REG1_IS_IMM;
+			alu_operation = `ALU_MODULE_REF.ALU_OP_REG0;
+			select_alu_reg0 = ALU_REG0_IS_IMM;
 		end
 		else
 		if(code_word_top==2)
 		begin
 			//rx = imm11<<7
 			reg_write_enable = 1;
-			reg_write_addr = code_rx;
 			imm = {code_word[10:0], 7'd0};
-			
-			alu_operation = `ALU_MODULE_REF.ALU_OP_REG1;
-			select_alu_reg1 = ALU_REG1_IS_IMM;
+			alu_operation = `ALU_MODULE_REF.ALU_OP_REG0;
+			select_alu_reg0 = ALU_REG0_IS_IMM;
 		end
 		else
 		if(code_word_top==3)
@@ -244,27 +236,22 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			//rx = ry[imm8]
 			reg_write_enable = 1;
 			reg_data_from_memory = 1;
-			reg_write_addr = code_rx;
 		end
 		else
 		if(code_word_top==4)
 		begin
 			//ry[imm8] = rx
-			reg_read_addr1 = code_rx;
-			reg_read_addr0 = code_ry;
 			mem_write = 1;
-			
 			alu_operation = `ALU_MODULE_REF.ALU_OP_ADD;
-			select_alu_reg1 = ALU_REG1_IS_IMM;
+			select_alu_reg0 = ALU_REG0_IS_IMM;
 		end
 		else
 		if(code_word_top==5)
 		begin
 			//if(rx op) goto ip+addr
-			reg_read_addr0 = code_rx;
 			alu_operation = `ALU_MODULE_REF.ALU_OP_ADD;
-			select_alu_reg0 = ALU_REG0_IS_IP;
-			select_alu_reg1 = ALU_REG1_IS_IMM;
+			select_alu_reg0 = ALU_REG0_IS_IMM;
+			select_alu_reg1 = ALU_REG1_IS_IP;
 			
 			write_alu_to_ip = if_ok;
 		end
@@ -273,18 +260,12 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 		begin
 			//rx = rx alu_op ry
 			alu_operation = code_word[3:0];
-			reg_read_addr0 = code_rx;
-			reg_read_addr1 = code_ry;
-			reg_write_addr = code_rx;
 			reg_write_enable = 1;
 		end
 		else
 		if(code_word_top==7)
 		begin
 			// rx = (rx*ry)>>shift
-			reg_read_addr0 = code_rx;
-			reg_read_addr1 = code_ry;
-			reg_write_addr = code_rx;
 			reg_data_from_mullxx = 1;
 			reg_write_enable = 1;
 		end
@@ -295,13 +276,13 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			//ip = imm14
 			write_imm14_to_ip = 1;
 			
-			reg_read_addr0 = 7;//r7==sp
 			mem_write = 1;
 			mem_write_ip_plus_one = 1;
 			imm = 0;
 			
 			alu_operation = `ALU_MODULE_REF.ALU_OP_ADD;
-			select_alu_reg1 = ALU_REG1_IS_IMM;
+			reg_read_addr1 = 7;//r7==sp
+			select_alu_reg0 = ALU_REG0_IS_IMM;
 		end
 		else
 		if(code_word_top==9)
@@ -310,9 +291,10 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			//return
 			write_alu_to_ip = 1;
 			reg_data_from_memory = 1;
-			reg_read_addr0 = 7;//r7==sp
+			
 			alu_operation = `ALU_MODULE_REF.ALU_OP_ADD;
-			select_alu_reg1 = ALU_REG1_IS_IMM;
+			reg_read_addr1 = 7;//r7==sp
+			select_alu_reg0 = ALU_REG0_IS_IMM;
 		end
 		else
 		if(code_word_top=='hA)
