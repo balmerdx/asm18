@@ -215,7 +215,8 @@ void AsmMaker::addCall(const std::string& label, size_t text_line)
 
 void AsmMaker::addReturn()
 {
-    uint32_t op = (OP_RETURN << BITS_TOP);
+    uint32_t ry = 7;
+    uint32_t op = (OP_RETURN << BITS_TOP) | (ry << BITS_OP1);
 	commands.push_back(op);
 }
 

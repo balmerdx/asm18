@@ -82,8 +82,8 @@ imm11 - 11 бит в интервале -1024..1023
 0x8 imm14
 	sp[0] = ip+1; ip = imm14 //call по абсолютному адресу
 	
-0x9 op6 imm8
-	op=0 ip = sp[imm8] //return imm8==0
+0x9 op3 ry imm8
+	op=0 ip = ry[imm8] //return imm8==0 ry==sp
 	
 0xA zero14 
 	wait - выставляем флаг ожидания. Ожидаем внешнего события.

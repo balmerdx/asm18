@@ -209,19 +209,11 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 		if(relaxation_quant==2'd1)
 		begin
 			//read memory on quant 1
-			if(code_word_top==OP_LOAD_FROM_MEMORY)
+			if(code_word_top==OP_LOAD_FROM_MEMORY ||
+			   code_word_top==OP_RETURN)
 			begin
-				//rx = ry[imm8]
+				//read ry[imm8]
 				alu_operation = `ALU_MODULE_REF.ALU_OP_ADD;
-				select_alu_reg0 = ALU_REG0_IS_IMM;
-				select_alu_reg1 = ALU_REG1_IS_REGISTER;
-			end
-			else
-			if(code_word_top==OP_RETURN)
-			begin
-				//ip = sp[imm8]
-				alu_operation = `ALU_MODULE_REF.ALU_OP_ADD;
-				reg_read_addr1 = 7;//r7==sp
 				select_alu_reg0 = ALU_REG0_IS_IMM;
 				select_alu_reg1 = ALU_REG1_IS_REGISTER;
 			end
@@ -312,8 +304,8 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 		else
 		if(code_word_top==OP_RETURN)
 		begin
-			//ip = sp[imm8]
-			//return
+			//ip = ry[imm8]
+			//return if (ry is sp) && imm8==0
 			write_alu_to_ip = 1;
 			reg_data_from_memory = 1;
 		end
