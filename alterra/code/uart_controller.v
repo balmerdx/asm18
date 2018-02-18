@@ -39,6 +39,7 @@ localparam COMMAND_CLEAR_CODE_MEMORY = 6;
 localparam COMMAND_SET_RESET = 7;
 localparam COMMAND_READ_REGISTERS = 8;
 localparam COMMAND_STEP = 9; //Запускает процессор на несколько шагов size, потом останавливает его
+localparam COMMAND_TIMER = 10;
 
 logic [7:0] leds = 0;
 assign ledout_pins = ~leds;
@@ -72,6 +73,14 @@ logic [17:0] data_rx = 0;
 
 logic [1:0] tx_byte_index;
 
+//Время, за которая программа дошла от
+//processor_reset ==0 до wait_for_continue==0
+
+logic [31:0] execution_timer;
+logic [31:0] execution_timer_to_send;
+logic execution_timer_sended;
+logic execution_timer_started;
+
 initial data_wren = 0;
 assign data_address = address;
 assign data_write = data_rx;
@@ -96,6 +105,12 @@ begin
 	data_wren <= 0;
 	code_wren <= 0;
 	uart_tx_send <= 0;
+	
+	if(wait_for_continue==1)
+		execution_timer_started <= 0;
+	if(execution_timer_started)
+		execution_timer <= execution_timer+1;
+	
 	if(uart_rx_received)
 	begin
 		rx_timeout <= 24'd5000000;//100 ms timeout
@@ -107,6 +122,8 @@ begin
 				size_index <= 0;
 				rx_byte_index <= 0;
 				tx_byte_index <= 0;
+				execution_timer_to_send <= execution_timer;
+				execution_timer_sended <= 0;
 				
 				if(uart_rx_byte==COMMAND_READ_REGISTERS)
 				begin
@@ -235,6 +252,9 @@ begin
 				processor_reset <= address[0];
 				debug_get_param <= address[1];
 				rx_state <= RX_COMMAND;
+				execution_timer_started <= ~address[0];
+				if(address[0])
+					execution_timer <= 0;
 				end
 				
 			COMMAND_STEP : begin
@@ -271,6 +291,41 @@ begin
 					if(size==0)
 					begin
 						rx_state <= RX_COMMAND;
+					end
+				end
+			COMMAND_TIMER : begin
+					if(uart_tx_active==0 && uart_tx_send==0)
+					begin
+						if(execution_timer_sended==0)
+						begin
+							case(tx_byte_index)
+							0: begin
+								usart_tx_data <= execution_timer_to_send[7:0];
+								tx_byte_index <= 1;
+								uart_tx_send <= 1;
+							end
+							1: begin
+								usart_tx_data <= execution_timer_to_send[15:8];
+								tx_byte_index <= 2;
+								uart_tx_send <= 1;
+							end
+							2: begin
+								usart_tx_data <= execution_timer_to_send[23:16];
+								tx_byte_index <= 3;
+								uart_tx_send <= 1;
+							end
+							3: begin
+								usart_tx_data <= execution_timer_to_send[31:24];
+								tx_byte_index <= 0;
+								uart_tx_send <= 1;
+								execution_timer_sended <= 1;
+							end
+							endcase
+						end
+						else
+						begin
+							rx_state <= RX_COMMAND;
+						end
 					end
 				end
 			endcase

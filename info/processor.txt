@@ -382,8 +382,8 @@ Total PLLs	0 / 2 ( 0 % )
 	- 0x6 alu --ok
 	- 0x5 if --ok
 	- 0x7 mul --ok
-	- 0x8 call
-	- 0x9 return
+	- 0x8 call --ok
+	- 0x9 return --ok
 
 - переделать память на под icatus на синхронное чтение --ok
 - процессор под 3 такта на команду --ok
@@ -405,3 +405,6 @@ Total PLLs	0 / 2 ( 0 % )
 	Total logic elements	1,023 / 10,320 ( 10 % )
 	Total registers	320
 
+
+- speed tests
+	счетчик, который запускается при запуске программы и останавливается при остановке

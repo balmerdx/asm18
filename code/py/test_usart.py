@@ -23,6 +23,7 @@ COMMAND_CLEAR_CODE_MEMORY = 6;
 COMMAND_SET_RESET = 7
 COMMAND_READ_REGISTERS = 8
 COMMAND_STEP = 9
+COMMAND_TIMER = 10
 
 
 ser = None
@@ -136,6 +137,12 @@ def sendProgram(filename):
 		print("Cannot read program `"+filename+"`")
 	sendWriteCodeMemory(0, prog)
 
+def sendGetTimer():
+	sendCommand(COMMAND_TIMER, 0, 0)
+	data = ser.read(4)
+	assert(len(data)==4)
+	return struct.unpack("=I", data)[0]
+
 def printReg(reg):
 	print("reg=", reg[0:8])
 	print("ip=", reg[8])
@@ -162,7 +169,9 @@ def runProgram():
 	sendReset(resetOn=0, debugGetParamOn=0)
 	time.sleep(0.01)
 
+	timeQuants = sendGetTimer()
 	saveState("intermediate/current.state")
+	return timeQuants
 
 if __name__ == "__main__":
 	if not connect():

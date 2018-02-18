@@ -100,9 +100,9 @@ def runSimulation():
 def runProgram():
 	global runOnHardware
 	if runOnHardware:
-		test_usart.runProgram()
+		return test_usart.runProgram()
 	else:
-		runSimulation()
+		return runSimulation()
 	pass
 
 def removeEndline(line):
@@ -152,12 +152,17 @@ def test(asmName):
 	
 	assembleAsm18(asmNameAbs)
 	fileExist(codeHex)
-	runProgram()
+	timeQuants = runProgram()
 	fileExist(currentState)
 	fileExist(stateName)
 	compareFiles(stateName, currentState)
 	
-	print("Test `"+asmName+"`" + COLOR_GREEN + " -success" + COLOR_RESET)
+	print("Test `"+asmName+"`" + COLOR_GREEN + " -success" + COLOR_RESET, end="")
+	if timeQuants:
+		print(" time="+str(timeQuants))
+	else:
+		print()
+
 	pass
 
 def main():
