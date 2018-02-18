@@ -11,3 +11,8 @@ tests_list = [
 "asm_tests/mul.asm18",
 "asm_tests/call.asm18",
 ]
+
+speed_tests_list = [
+"asm_tests/speed/loop.asm18",
+"asm_tests/speed/loop_mem.asm18",
+]

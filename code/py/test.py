@@ -22,7 +22,7 @@ COLOR_RESET = "\033[0;0m"
 COLOR_BOLD    = "\033[;1m"
 COLOR_REVERSE = "\033[;7m"
 
-from tests_list import tests_list
+from tests_list import tests_list, speed_tests_list
 import test_usart
 
 intermediateDir = abspath("intermediate")
@@ -213,6 +213,13 @@ def main():
 
 		return
 
+	if "speedtests"==sys.argv[1]:
+		alltests = True
+		buildVerilog(generateVcd=False)
+		for cur_test in speed_tests_list:
+			test(cur_test)
+
+		return
 	pass
 	
 if __name__ == '__main__':
