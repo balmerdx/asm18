@@ -41,6 +41,18 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 	localparam logic ALU_REG1_IS_REGISTER = 0;
 	localparam logic ALU_REG1_IS_IP = 1;
 	
+	localparam logic [3:0] OP_REG_ADD_IMM8 = 4'h0; //rx = ry + imm8
+	localparam logic [3:0] OP_REG_MOV_IMM11 = 4'h1; //rx = imm11
+	localparam logic [3:0] OP_REG_MOV_IMM11_TOP = 4'h2; //rx = imm11<<7
+	localparam logic [3:0] OP_LOAD_FROM_MEMORY = 4'h3; //rx = ry[imm8]
+	localparam logic [3:0] OP_WRITE_TO_MEMORY = 4'h4; //ry[imm8] = rx
+	localparam logic [3:0] OP_IF = 4'h5; //if(rx op) goto ip+addr
+	localparam logic [3:0] OP_ALU = 4'h6; //rx = rx alu_op ry
+	localparam logic [3:0] OP_MUL_SHIFT = 4'h7; // rx = (rx*ry) >> imm
+	localparam logic [3:0] OP_CALL_IMM14 = 4'h8; // call imm14
+	localparam logic [3:0] OP_RETURN = 4'h9; // ip = sp[imm8]
+	localparam logic [3:0] OP_WAIT = 4'hA;
+	
 	// instruction pointer
 	reg [(WORD_SIZE-1):0] ip;
 	
@@ -197,23 +209,25 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 		if(relaxation_quant==2'd1)
 		begin
 			//read memory on quant 1
-			if(code_word_top==3)
+			if(code_word_top==OP_LOAD_FROM_MEMORY)
 			begin
 				//rx = ry[imm8]
 				alu_operation = `ALU_MODULE_REF.ALU_OP_ADD;
 				select_alu_reg0 = ALU_REG0_IS_IMM;
+				select_alu_reg1 = ALU_REG1_IS_REGISTER;
 			end
 		end
 		else
-		if(code_word_top==0)
+		if(code_word_top==OP_REG_ADD_IMM8)
 		begin
 			//rx = ry + imm8
 			reg_write_enable = 1;
 			alu_operation = `ALU_MODULE_REF.ALU_OP_ADD;
 			select_alu_reg0 = ALU_REG0_IS_IMM;
+			select_alu_reg1 = ALU_REG1_IS_REGISTER;
 		end
 		else
-		if(code_word_top==1)
+		if(code_word_top==OP_REG_MOV_IMM11)
 		begin
 			//rx = imm11
 			reg_write_enable = 1;
@@ -222,7 +236,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			select_alu_reg0 = ALU_REG0_IS_IMM;
 		end
 		else
-		if(code_word_top==2)
+		if(code_word_top==OP_REG_MOV_IMM11_TOP)
 		begin
 			//rx = imm11<<7
 			reg_write_enable = 1;
@@ -231,22 +245,23 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			select_alu_reg0 = ALU_REG0_IS_IMM;
 		end
 		else
-		if(code_word_top==3)
+		if(code_word_top==OP_LOAD_FROM_MEMORY)
 		begin
 			//rx = ry[imm8]
 			reg_write_enable = 1;
 			reg_data_from_memory = 1;
 		end
 		else
-		if(code_word_top==4)
+		if(code_word_top==OP_WRITE_TO_MEMORY)
 		begin
 			//ry[imm8] = rx
 			mem_write = 1;
 			alu_operation = `ALU_MODULE_REF.ALU_OP_ADD;
 			select_alu_reg0 = ALU_REG0_IS_IMM;
+			select_alu_reg1 = ALU_REG1_IS_REGISTER;
 		end
 		else
-		if(code_word_top==5)
+		if(code_word_top==OP_IF)
 		begin
 			//if(rx op) goto ip+addr
 			alu_operation = `ALU_MODULE_REF.ALU_OP_ADD;
@@ -256,21 +271,21 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			write_alu_to_ip = if_ok;
 		end
 		else
-		if(code_word_top==6)
+		if(code_word_top==OP_ALU)
 		begin
 			//rx = rx alu_op ry
 			alu_operation = code_word[3:0];
 			reg_write_enable = 1;
 		end
 		else
-		if(code_word_top==7)
+		if(code_word_top==OP_MUL_SHIFT)
 		begin
 			// rx = (rx*ry)>>shift
 			reg_data_from_mullxx = 1;
 			reg_write_enable = 1;
 		end
 		else
-		if(code_word_top==8)
+		if(code_word_top==OP_CALL_IMM14)
 		begin
 			//sp[0] = ip+1
 			//ip = imm14
@@ -283,9 +298,10 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			alu_operation = `ALU_MODULE_REF.ALU_OP_ADD;
 			reg_read_addr1 = 7;//r7==sp
 			select_alu_reg0 = ALU_REG0_IS_IMM;
+			select_alu_reg1 = ALU_REG1_IS_REGISTER;
 		end
 		else
-		if(code_word_top==9)
+		if(code_word_top==OP_RETURN)
 		begin
 			//ip = sp[imm8]
 			//return
@@ -295,9 +311,10 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			alu_operation = `ALU_MODULE_REF.ALU_OP_ADD;
 			reg_read_addr1 = 7;//r7==sp
 			select_alu_reg0 = ALU_REG0_IS_IMM;
+			select_alu_reg1 = ALU_REG1_IS_REGISTER;
 		end
 		else
-		if(code_word_top=='hA)
+		if(code_word_top==OP_WAIT)
 		begin
 			//wait command
 			//Останавливаемся, если не выставлен флаг 

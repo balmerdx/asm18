@@ -13,9 +13,22 @@ const int BITS_OP0 = 11;
 //3 bit operand 0 or operation 1
 const int BITS_OP1 = 8;
 
-const uint32_t OPCODE_WAIT = (0xA << BITS_TOP);
 
 const int POW18 = 0x40000;
+
+const uint32_t OP_REG_ADD_IMM8 = 0x0; //rx = ry + imm8
+const uint32_t OP_REG_MOV_IMM11 = 0x1; //rx = imm11
+const uint32_t OP_REG_MOV_IMM11_TOP = 0x2; //rx = imm11<<7
+const uint32_t OP_LOAD_FROM_MEMORY = 0x3; //rx = ry[imm8]
+const uint32_t OP_WRITE_TO_MEMORY = 0x4; //ry[imm8] = rx
+const uint32_t OP_IF = 0x5; //if(rx op) goto ip+addr
+const uint32_t OP_ALU = 0x6; //rx = rx alu_op ry
+const uint32_t OP_MUL_SHIFT = 0x7; // rx = (rx*ry) >> imm
+const uint32_t OP_CALL_IMM14 = 0x8; // call imm14
+const uint32_t OP_RETURN = 0x9; // ip = sp[imm8]
+const uint32_t OP_WAIT = 0xA;
+
+const uint32_t OPCODE_WAIT = (OP_WAIT << BITS_TOP);
 
 AsmMaker::AsmMaker()
 {
@@ -92,7 +105,7 @@ void AsmMaker::addMovImm11(int reg, int number)
 	assert(isValidReg(reg));
 	assert(isValidImm11(number));
 	
-	uint32_t op = (0x1 << BITS_TOP) | (reg << BITS_OP0) | ((uint32_t)number & 0x7FF);
+    uint32_t op = (OP_REG_MOV_IMM11 << BITS_TOP) | (reg << BITS_OP0) | ((uint32_t)number & 0x7FF);
 	commands.push_back(op);
 }
 
@@ -103,7 +116,7 @@ void AsmMaker::addMovImm11Top(int reg, int number)
 
 	number /= 128;
 
-	uint32_t op = (0x2 << BITS_TOP) | (reg << BITS_OP0) | ((uint32_t)number & 0x7FF);
+    uint32_t op = (OP_REG_MOV_IMM11_TOP << BITS_TOP) | (reg << BITS_OP0) | ((uint32_t)number & 0x7FF);
 	commands.push_back(op);
 }
 
@@ -141,7 +154,7 @@ void AsmMaker::addAddRegImm8(int rx, int ry, int imm8)
 	assert(isValidReg(ry));
 	assert(isValidImm8(imm8));
 
-	uint32_t op = (0x0 << BITS_TOP) | (rx << BITS_OP0) | (ry << BITS_OP1) | ((uint32_t)imm8 & 0xFF);
+    uint32_t op = (OP_REG_ADD_IMM8 << BITS_TOP) | (rx << BITS_OP0) | (ry << BITS_OP1) | ((uint32_t)imm8 & 0xFF);
 	commands.push_back(op);
 }
 
@@ -151,7 +164,7 @@ void AsmMaker::addLoadFromMemory(int rx, int ry, int imm8)
 	assert(isValidReg(ry));
 	assert(isValidImm8(imm8));
 
-	uint32_t op = (0x3 << BITS_TOP) | (rx << BITS_OP0) | (ry << BITS_OP1) | ((uint32_t)imm8 & 0xFF);
+    uint32_t op = (OP_LOAD_FROM_MEMORY << BITS_TOP) | (rx << BITS_OP0) | (ry << BITS_OP1) | ((uint32_t)imm8 & 0xFF);
 	commands.push_back(op);
 }
 
@@ -161,7 +174,7 @@ void AsmMaker::addStoreToMemory(int rx, int ry, int imm8)
 	assert(isValidReg(ry));
 	assert(isValidImm8(imm8));
 
-	uint32_t op = (0x4 << BITS_TOP) | (rx << BITS_OP0) | (ry << BITS_OP1) | ((uint32_t)imm8 & 0xFF);
+    uint32_t op = (OP_WRITE_TO_MEMORY << BITS_TOP) | (rx << BITS_OP0) | (ry << BITS_OP1) | ((uint32_t)imm8 & 0xFF);
 	commands.push_back(op);
 }
 
@@ -169,7 +182,7 @@ void AsmMaker::addStoreToMemory(int rx, int ry, int imm8)
 void AsmMaker::addGotoIf(int rx, IfOperation if_op, const std::string& label, size_t text_line)
 {
 	assert(isValidReg(rx));
-	uint32_t op = (0x5 << BITS_TOP) | (rx << BITS_OP0) | ((uint32_t)if_op << BITS_OP1);// | ((uint32_t)imm8 & 0xFF);
+    uint32_t op = (OP_IF << BITS_TOP) | (rx << BITS_OP0) | ((uint32_t)if_op << BITS_OP1);// | ((uint32_t)imm8 & 0xFF);
 	JumpData jd;
 	jd.command_pos = commands.size();
 	jd.label = label;
@@ -184,13 +197,13 @@ void AsmMaker::addAluOp(int rx, int ry, AluOperation alu_op)
 	assert(isValidReg(rx));
 	assert(isValidReg(ry));
 
-	uint32_t op = (0x6 << BITS_TOP) | (rx << BITS_OP0) | (ry << BITS_OP1) | ((uint32_t)alu_op & 0xFF);
+    uint32_t op = (OP_ALU << BITS_TOP) | (rx << BITS_OP0) | (ry << BITS_OP1) | ((uint32_t)alu_op & 0xFF);
 	commands.push_back(op);
 }
 
 void AsmMaker::addCall(const std::string& label, size_t text_line)
 {
-	uint32_t op = (0x8 << BITS_TOP);
+    uint32_t op = (OP_CALL_IMM14 << BITS_TOP);
 	JumpData jd;
 	jd.command_pos = commands.size();
 	jd.label = label;
@@ -202,7 +215,7 @@ void AsmMaker::addCall(const std::string& label, size_t text_line)
 
 void AsmMaker::addReturn()
 {
-	uint32_t op = (0x9 << BITS_TOP);
+    uint32_t op = (OP_RETURN << BITS_TOP);
 	commands.push_back(op);
 }
 
@@ -220,7 +233,7 @@ void AsmMaker::addMul(int rx, int ry, bool signedx, bool signedy, int shift_righ
 
 	uint32_t signx = signedx ? 1 << 7 : 0;
 	uint32_t signy = signedy ? 1 << 6 : 0;
-	uint32_t op = (0x7 << BITS_TOP) | (rx << BITS_OP0) | (ry << BITS_OP1) | signx | signy | ((uint32_t)shift_right & 0x3F);
+    uint32_t op = (OP_MUL_SHIFT << BITS_TOP) | (rx << BITS_OP0) | (ry << BITS_OP1) | signx | signy | ((uint32_t)shift_right & 0x3F);
 	commands.push_back(op);
 }
 
