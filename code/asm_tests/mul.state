@@ -1,6 +1,6 @@
 registers
 r0 = 00000
-r1 = 00fff
+r1 = 007ff
 r2 = 00001
 r3 = 00000
 r4 = 00000
@@ -16,12 +16,12 @@ memory
 3fffa
 00000
 00001
-1ffff
 0ffff
 07fff
 03fff
 01fff
 00fff
+007ff
 xxxxx
 xxxxx
 xxxxx

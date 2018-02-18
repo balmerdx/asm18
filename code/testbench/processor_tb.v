@@ -1,12 +1,21 @@
 module code_ram #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE = 18, parameter integer MEM_SIZE = 1024)
-	(input wire [(ADDR_SIZE-1):0] addr,
-	output wire [(WORD_SIZE-1):0] dout);
+	(
+	input wire clock,
+	input wire [(ADDR_SIZE-1):0] addr,
+	//output wire [(WORD_SIZE-1):0] dout //async ram
+	output logic [(WORD_SIZE-1):0] dout //sync ram
+	);
 
 	reg [(WORD_SIZE-1):0] mem [(MEM_SIZE-1):0];
 	
 	initial $readmemh("intermediate/code.hex", mem);
-	
-	assign dout = mem[addr];
+
+	always @(posedge clock)
+	begin
+		dout <= mem[addr]; //sync ram
+	end
+
+	//assign dout = mem[addr]; //async ram
 endmodule
 
 module processor_tb;
@@ -154,6 +163,7 @@ module processor_tb;
 	
 	code_ram #(.ADDR_SIZE(WORD_SIZE), .WORD_SIZE(WORD_SIZE), .MEM_SIZE(MEM_SIZE))
 		program_memory(
+		.clock(clock),
 		.addr(program_memory_addr),
 		.dout(program_memory_out_data));
 		

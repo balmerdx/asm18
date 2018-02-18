@@ -40,12 +40,12 @@ bool AsmMaker::isValidImm11Top(int number)
 
 bool AsmMaker::isValidImm14unsigned(int number)
 {
-	return number >= 0 && number < 0x4000;
+    return number >= 0 && number < POW18;
 }
 
 bool AsmMaker::isValidImm18(int number)
 {
-	return number >= -1024 * 128 && number < 1024 * 128;
+    return number >= -(POW18/2) && number < (POW18/2);
 }
 
 bool AsmMaker::isValidImm8(int number)

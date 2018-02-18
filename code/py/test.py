@@ -14,6 +14,14 @@ import os
 import os.path
 from os.path import abspath, normpath, join
 
+COLOR_RED   = "\033[1;31m"  
+COLOR_BLUE  = "\033[1;34m"
+COLOR_CYAN  = "\033[1;36m"
+COLOR_GREEN = "\033[0;32m"
+COLOR_RESET = "\033[0;0m"
+COLOR_BOLD    = "\033[;1m"
+COLOR_REVERSE = "\033[;7m"
+
 from tests_list import tests_list
 import test_usart
 
@@ -30,8 +38,6 @@ if sys.platform=="linux":
 	assemblerExecutable = abspath("../AsmProcessor18/qt/AsmProcessor18-Debug/AsmProcessor18")
 else:
 	assemblerExecutable = abspath("../AsmProcessor18/VC2013/Debug/AsmProcessor18.exe")
-assemblerSamples = abspath("../AsmSamples")
-print(assemblerSamples)
 
 sourceProcessor = [
 	"ram.v",
@@ -125,7 +131,7 @@ def compareFiles(stateName, currentState):
 
 		if sl!=cl:
 			print("Compare `"+stateName+"` and `"+currentState+"`")
-			print("Lines not matched line="+str(i+1))
+			print("Lines "+COLOR_RED+ "not matched" + COLOR_RESET+ " line="+str(i+1))
 			print(sl)
 			print(cl)
 			exit(1)
@@ -151,7 +157,7 @@ def test(asmName):
 	fileExist(stateName)
 	compareFiles(stateName, currentState)
 	
-	print("Test `"+asmName+"` -success")
+	print("Test `"+asmName+"`" + COLOR_GREEN + " -success" + COLOR_RESET)
 	pass
 
 def main():

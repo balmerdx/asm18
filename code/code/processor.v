@@ -51,7 +51,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 	logic wait_logic;
 	assign wait_for_continue = wait_logic;
 	
-	logic relaxation_quant = 0;
+	logic [1:0] relaxation_quant;
 	
 	logic [3:0] reg_read_addr0;
 	logic [(WORD_SIZE-1):0] reg_read_data0;
@@ -96,8 +96,6 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 	
 	logic [(WORD_SIZE-1):0] mulxx_write_data;
 	logic [4:0] mulxx_shift;
-	logic mulxx_signx;
-	logic mulxx_signy;
 	
 	logic [2:0] if_operation;
 	logic if_ok;
@@ -129,8 +127,6 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 		.r0(alu_data0),
 		.r1(alu_data1),
 		.shift(mulxx_shift),
-		.signx(mulxx_signx),
-		.signy(mulxx_signy),
 		.res(mulxx_write_data) //result
 		);
 	
@@ -159,8 +155,6 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 	
 	//see if(code_word_top==7)
 	assign mulxx_shift = code_word[4:0];
-	assign mulxx_signx = code_word[7];
-	assign mulxx_signy = code_word[6];
 
 `ifdef PROCESSOR_DEBUG_INTERFACE
 	assign debug_data_out = alu_data0;
@@ -188,18 +182,30 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 		select_alu_reg0 = ALU_REG0_IS_REGISTER;
 		select_alu_reg1 = ALU_REG1_IS_REGISTER;
 `ifdef PROCESSOR_DEBUG_INTERFACE
-		if(debug_get_param || relaxation_quant)
+		if(debug_get_param)
 		begin
 			select_alu_reg0 = debug_reg_addr[3]?ALU_REG0_IS_IP:ALU_REG0_IS_REGISTER;
 			reg_read_addr0 = debug_reg_addr[2:0];
 		end
 		else
-`else
-		if(relaxation_quant)
+`endif
+		if(relaxation_quant==2'd2)
 		begin
+			//none on quant 0
 		end
 		else
-`endif
+		if(relaxation_quant==2'd1)
+		begin
+			//read memoty on quant 1
+			if(code_word_top==3)
+			begin
+				//rx = ry[imm8]
+				reg_read_addr0 = code_ry;
+				alu_operation = `ALU_MODULE_REF.ALU_OP_ADD;
+				select_alu_reg1 = ALU_REG1_IS_IMM;
+			end
+		end
+		else
 		if(code_word_top==0)
 		begin
 			//rx = ry + imm8
@@ -239,11 +245,6 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			reg_write_enable = 1;
 			reg_data_from_memory = 1;
 			reg_write_addr = code_rx;
-			reg_read_addr0 = code_ry;
-			
-			alu_operation = `ALU_MODULE_REF.ALU_OP_ADD;
-			select_alu_reg1 = ALU_REG1_IS_IMM;
-			
 		end
 		else
 		if(code_word_top==4)
@@ -260,6 +261,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 		if(code_word_top==5)
 		begin
 			//if(rx op) goto ip+addr
+			reg_read_addr0 = code_rx;
 			alu_operation = `ALU_MODULE_REF.ALU_OP_ADD;
 			select_alu_reg0 = ALU_REG0_IS_IP;
 			select_alu_reg1 = ALU_REG1_IS_IMM;
@@ -327,29 +329,36 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 	if(reset)
 	begin
 		ip <= 0;
+		relaxation_quant <= 2'd2;
 	end
 	else
 	begin
-		//Совсем кривой вариант, замедляем процессор в 2 раза
-		relaxation_quant <= ~relaxation_quant;
+		//Совсем кривой вариант, замедляем процессор в 3 раза
+		//Первый квант ожидаем, пока прочитается команда
+		//Второй квант ожидаем, пока прочитаются данные из памяти данных
+		relaxation_quant <= relaxation_quant-2'd1;
 		
 		if(wait_logic
 `ifdef PROCESSOR_DEBUG_INTERFACE
 			|| debug_get_param
 `endif
-			|| relaxation_quant
+			|| (relaxation_quant>0)
 		)
 		begin
 			ip <= ip;
 		end
 		else
-		if(write_imm14_to_ip)
-			ip <= {4'b0000, code_word[13:0]};
-		else
-		if(write_alu_to_ip)
-			ip <= reg_write_data;
-		else
-			ip <= ip_plus_one;
+		begin
+			relaxation_quant <= 2'd2;
+
+			if(write_imm14_to_ip)
+				ip <= {4'b0000, code_word[13:0]};
+			else
+			if(write_alu_to_ip)
+				ip <= reg_write_data;
+			else
+				ip <= ip_plus_one;
+		end
 	end
 
 endmodule

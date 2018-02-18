@@ -1,12 +1,12 @@
     r0 = 0
     r1 = 2
     r2 = 2
-    muluu(r1, r2, 0)
+    mulss(r1, r2, 0)
     r0[0] = r1
 
     r1 = 2
     r2 = 2
-    mulus(r1, r2, 0)
+    mulss(r1, r2, 0)
     r0[1] = r1
 
     r1 = 2
@@ -16,17 +16,17 @@
 
     r1 = -2
     r2 = 2
-    mulsu(r1, r2, 0)
+    mulss(r1, r2, 0)
     r0[3] = r1
 
     r1 = -3
     r2 = 2
-    mulsu(r1, r2, 0)
+    mulss(r1, r2, 0)
     r0[4] = r1
 
     r1 = -3
     r2 = 0
-    mulsu(r1, r2, 0)
+    mulss(r1, r2, 0)
     r0[5] = r1
 
     r1 = -1
@@ -34,34 +34,34 @@
     mulss(r1, r2, 0)
     r0[6] = r1
 
-    r1 = 0x3ffff
+    r1 = 0x1ffff
     r2 = 1
-    muluu(r1, r2, 1)
+    mulss(r1, r2, 1)
     r0[7] = r1
 
-    r1 = 0x3ffff
+    r1 = 0x1ffff
     r2 = 1
-    muluu(r1, r2, 2)
+    mulss(r1, r2, 2)
     r0[8] = r1
 
-    r1 = 0x3ffff
+    r1 = 0x1ffff
     r2 = 1
-    muluu(r1, r2, 3)
+    mulss(r1, r2, 3)
     r0[9] = r1
 
-    r1 = 0x3ffff
+    r1 = 0x1ffff
     r2 = 1
-    muluu(r1, r2, 4)
+    mulss(r1, r2, 4)
     r0[10] = r1
 
-    r1 = 0x3ffff
+    r1 = 0x1ffff
     r2 = 1
-    muluu(r1, r2, 5)
+    mulss(r1, r2, 5)
     r0[11] = r1
 
-    r1 = 0x3ffff
+    r1 = 0x1ffff
     r2 = 1
-    muluu(r1, r2, 6)
+    mulss(r1, r2, 6)
     r0[12] = r1
 
 	wait

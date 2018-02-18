@@ -3,8 +3,6 @@ module mulxx #(parameter integer WORD_SIZE = 18)
 	input wire [WORD_SIZE-1:0] r0,
 	input wire [WORD_SIZE-1:0] r1,
 	input wire [4:0] shift, //0..17
-	input wire signx,
-	input wire signy,
 	output reg [WORD_SIZE-1:0] res //result
 	);
 	
@@ -15,12 +13,7 @@ module mulxx #(parameter integer WORD_SIZE = 18)
 	
 	always @(*)
 	begin
-		case({signx, signy})
-		2'b00: mx = r0*r1;
-		2'b01: mx = r0*$signed(r1);
-		2'b10: mx = $signed(r0)*r1;
-		2'b11: mx = $signed(r0)*$signed(r1);
-		endcase
+		mx = $signed(r0)*$signed(r1);
 		
 		case(shift[2:0])
 		0: shift1 = mx;

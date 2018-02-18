@@ -83,6 +83,9 @@ set_location_assignment PIN_132 -to uart_rx_pin
 set_location_assignment PIN_135 -to uart_tx_pin
 set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS ON
 set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
+set_global_assignment -name VERILOG_MACRO "PROCESSOR_DEBUG_INTERFACE=<None>"
+set_global_assignment -name VERILOG_MACRO "QUARTUS=<None>"
+set_global_assignment -name VERILOG_FILE ../code/code/processor_cut.v
 set_global_assignment -name VERILOG_FILE ../code/code/regfile.v
 set_global_assignment -name VERILOG_FILE ../code/code/ram.v
 set_global_assignment -name VERILOG_FILE ../code/code/processor.v
@@ -95,8 +98,6 @@ set_global_assignment -name VERILOG_FILE code/uart_rx.v
 set_global_assignment -name VERILOG_FILE code/test_asm18.v
 set_global_assignment -name CDF_FILE output_files/Chain.cdf
 set_global_assignment -name QIP_FILE memory/mem1k.qip
-set_global_assignment -name VERILOG_MACRO "PROCESSOR_DEBUG_INTERFACE=<None>"
-set_global_assignment -name VERILOG_MACRO "QUARTUS=<None>"
 set_global_assignment -name QIP_FILE pll/slow_pll.qip
 set_global_assignment -name QIP_FILE memory/mem_async.qip
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

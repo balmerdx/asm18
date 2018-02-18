@@ -114,9 +114,11 @@ bool AsmParser::nextLine()
 		return false;
 
 	std::size_t cur_offset = _filebody_offset;
+    bool found13 = false;
 	while (cur_offset < _filebody.size())
 	{
-        if (_filebody[cur_offset] == 13 || _filebody[cur_offset] == 10)
+        found13 = _filebody[cur_offset] == 13;
+        if (found13 || _filebody[cur_offset] == 10)
 		{
 			break;
 		}
@@ -131,7 +133,7 @@ bool AsmParser::nextLine()
 	{
 		line_is = true;
 		cur_offset++;
-		if (cur_offset < _filebody.size() && _filebody[cur_offset] == 10)
+        if (cur_offset < _filebody.size() && (found13 && _filebody[cur_offset] == 10))
 			cur_offset++;
 	}
 
@@ -986,16 +988,16 @@ bool AsmParser::parseMul(std::vector<Token>& tokens)
 	//imm6 - shift left
 	//rx, ry - registers
 
-	bool is_muluu = tokens[0].type == TokenType::Id && tokens[0].str == "muluu";
-	bool is_mulsu = tokens[0].type == TokenType::Id && tokens[0].str == "mulsu";
-	bool is_mulus = tokens[0].type == TokenType::Id && tokens[0].str == "mulus";
+    //bool is_muluu = tokens[0].type == TokenType::Id && tokens[0].str == "muluu";
+    //bool is_mulsu = tokens[0].type == TokenType::Id && tokens[0].str == "mulsu";
+    //bool is_mulus = tokens[0].type == TokenType::Id && tokens[0].str == "mulus";
 	bool is_mulss = tokens[0].type == TokenType::Id && tokens[0].str == "mulss";
 	size_t cur_token = 0;
 
-	if (!(is_muluu || is_mulsu || is_mulus || is_mulss))
+    if (!(is_mulss))
 		return false;
-	bool signedx = is_mulsu || is_mulss;
-	bool signedy = is_mulus || is_mulss;
+    bool signedx = is_mulss;
+    bool signedy = is_mulss;
 	cur_token++;
 
 	if (!(cur_token < tokens.size() && tokens[cur_token].isBracket('(')))
