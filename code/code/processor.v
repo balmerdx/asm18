@@ -216,6 +216,15 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 				select_alu_reg0 = ALU_REG0_IS_IMM;
 				select_alu_reg1 = ALU_REG1_IS_REGISTER;
 			end
+			else
+			if(code_word_top==OP_RETURN)
+			begin
+				//ip = sp[imm8]
+				alu_operation = `ALU_MODULE_REF.ALU_OP_ADD;
+				reg_read_addr1 = 7;//r7==sp
+				select_alu_reg0 = ALU_REG0_IS_IMM;
+				select_alu_reg1 = ALU_REG1_IS_REGISTER;
+			end
 		end
 		else
 		if(code_word_top==OP_REG_ADD_IMM8)
@@ -307,11 +316,6 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			//return
 			write_alu_to_ip = 1;
 			reg_data_from_memory = 1;
-			
-			alu_operation = `ALU_MODULE_REF.ALU_OP_ADD;
-			reg_read_addr1 = 7;//r7==sp
-			select_alu_reg0 = ALU_REG0_IS_IMM;
-			select_alu_reg1 = ALU_REG1_IS_REGISTER;
 		end
 		else
 		if(code_word_top==OP_WAIT)
