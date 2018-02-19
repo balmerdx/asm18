@@ -43,9 +43,11 @@ sourceProcessor = [
 	"ram.v",
 	"regfile.v",
 	"processor.v",
+	"opcodes.v",
 	"alu.v",
+	"alu_op.v",
 	"if_control.v",
-	"mulxx.v"
+	"mulxx.v",
 	]
 
 sourceTb = ["testbench/processor_tb.v"]

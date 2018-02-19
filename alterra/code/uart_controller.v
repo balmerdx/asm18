@@ -1,7 +1,8 @@
 //Send/receive uart 3 byte with speed 500 kbps
 
 module uart_controller
-	#(parameter integer WORD_SIZE = 18)
+	#(parameter integer WORD_SIZE = 18,
+	parameter integer UART_CLKS_PER_BIT = 100)
 	(
 	input clock,
 	input uart_rx_pin,
@@ -25,9 +26,6 @@ module uart_controller
 	output reg [3:0] debug_reg_addr,
 	input [(WORD_SIZE-1):0] debug_data_out
 	);
-
-//localparam UART_CLKS_PER_BIT = 100; //500 kbps for 50 MHz clock
-localparam UART_CLKS_PER_BIT = 50; //500 kbps for 25 MHz clock
 
 localparam COMMAND_SET_LED = 0;
 localparam COMMAND_WRITE_DATA_MEMORY = 1;

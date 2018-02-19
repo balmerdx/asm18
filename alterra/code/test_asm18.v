@@ -1,3 +1,6 @@
+//`define USE_25MHZ
+`define USE_100MHZ
+
 module test_asm18(
 	input clk_50M,
 	output reg [7:0] ledout,
@@ -9,7 +12,8 @@ module test_asm18(
 
 localparam WORD_SIZE = 18;
 
-wire clk_25M;
+
+wire clock_proc;
 
 logic [17:0] data_address_a = 0;
 logic [17:0] data_address_b = 0;
@@ -37,13 +41,23 @@ logic debug_get_param = 0;
 logic [3:0] debug_reg_addr = 0;
 logic [(WORD_SIZE-1):0] debug_data_out;
 
-slow_pll pll25mhz(
-	clk_50M,
-	clk_25M);
+`ifdef USE_100MHZ
+	localparam UART_CLKS_PER_BIT = 200; //500 kbps for 100 MHz clock
+	fast_pll pll25mhz(clk_50M, clock_proc);
+`else
+	`ifdef USE_25MHZ
+		localparam UART_CLKS_PER_BIT = 50; //500 kbps for 25 MHz clock
+		slow_pll pll25mhz(clk_50M, clock_proc);
+	`else
+		localparam UART_CLKS_PER_BIT = 100; //500 kbps for 50 MHz clock
+		assign clock_proc = clk_50M;
+	`endif
+`endif
 
 
-uart_controller uart_controller0(
-	.clock(clk_25M),
+uart_controller #(.UART_CLKS_PER_BIT(UART_CLKS_PER_BIT))
+	uart_controller0(
+	.clock(clock_proc),
 	.uart_rx_pin(uart_rx_pin),
 	.uart_tx_pin(uart_tx_pin),
 	.ledout_pins(ledout),
@@ -66,7 +80,7 @@ uart_controller uart_controller0(
 mem_async  mem1k_data(
 	.address_a(data_address_a),
 	.address_b(data_address_b),
-	.clock(clk_25M),
+	.clock(clock_proc),
 	.data_a(data_write_a),
 	.data_b(data_write_b),
 	.wren_a(data_wren_a),
@@ -78,7 +92,7 @@ mem_async  mem1k_data(
 mem_async  mem1k_code(
 	.address_a(code_address_a),
 	.address_b(code_address_b),
-	.clock(clk_25M),
+	.clock(clock_proc),
 	.data_a(code_write_a),
 	.data_b(code_write_b),
 	.wren_a(code_wren_a),
@@ -89,7 +103,7 @@ mem_async  mem1k_code(
 
 processor #(.ADDR_SIZE(WORD_SIZE), .WORD_SIZE(WORD_SIZE))
 		processor18(
-		.clock(clk_25M),
+		.clock(clock_proc),
 		.reset(processor_reset),
 	
 		//Интерфейс для чтения программы

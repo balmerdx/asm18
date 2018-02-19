@@ -1,8 +1,3 @@
-`ifdef QUARTUS
-`define ALU_MODULE_REF alu
-`else
-`define ALU_MODULE_REF alu0
-`endif
 
 module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE = 18)
 	(input wire clock,
@@ -41,17 +36,6 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 	localparam logic ALU_REG1_IS_REGISTER = 0;
 	localparam logic ALU_REG1_IS_IP = 1;
 	
-	localparam logic [3:0] OP_REG_ADD_IMM8 = 4'h0; //rx = ry + imm8
-	localparam logic [3:0] OP_REG_MOV_IMM11 = 4'h1; //rx = imm11
-	localparam logic [3:0] OP_REG_MOV_IMM11_TOP = 4'h2; //rx = imm11<<7
-	localparam logic [3:0] OP_LOAD_FROM_MEMORY = 4'h3; //rx = ry[imm8]
-	localparam logic [3:0] OP_WRITE_TO_MEMORY = 4'h4; //ry[imm8] = rx
-	localparam logic [3:0] OP_IF = 4'h5; //if(rx op) goto ip+addr
-	localparam logic [3:0] OP_ALU = 4'h6; //rx = rx alu_op ry
-	localparam logic [3:0] OP_MUL_SHIFT = 4'h7; // rx = (rx*ry) >> imm
-	localparam logic [3:0] OP_CALL_IMM14 = 4'h8; // call imm14
-	localparam logic [3:0] OP_RETURN = 4'h9; // ip = sp[imm8]
-	localparam logic [3:0] OP_WAIT = 4'hA;
 	
 	// instruction pointer
 	reg [(WORD_SIZE-1):0] ip;
@@ -190,7 +174,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 		
 		if_operation = code_word[10:8];
 		
-		alu_operation = `ALU_MODULE_REF.ALU_OP_REG0;
+		alu_operation = ALU_OP_REG0;
 		select_alu_reg0 = ALU_REG0_IS_REGISTER;
 		select_alu_reg1 = ALU_REG1_IS_REGISTER;
 `ifdef PROCESSOR_DEBUG_INTERFACE
@@ -213,7 +197,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			   code_word_top==OP_RETURN)
 			begin
 				//read ry[imm8]
-				alu_operation = `ALU_MODULE_REF.ALU_OP_ADD;
+				alu_operation = ALU_OP_ADD;
 				select_alu_reg0 = ALU_REG0_IS_IMM;
 				select_alu_reg1 = ALU_REG1_IS_REGISTER;
 			end
@@ -223,7 +207,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 		begin
 			//rx = ry + imm8
 			reg_write_enable = 1;
-			alu_operation = `ALU_MODULE_REF.ALU_OP_ADD;
+			alu_operation = ALU_OP_ADD;
 			select_alu_reg0 = ALU_REG0_IS_IMM;
 			select_alu_reg1 = ALU_REG1_IS_REGISTER;
 		end
@@ -233,7 +217,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			//rx = imm11
 			reg_write_enable = 1;
 			imm = {{7{code_word[10]}}, code_word[10:0]};
-			alu_operation = `ALU_MODULE_REF.ALU_OP_REG0;
+			alu_operation = ALU_OP_REG0;
 			select_alu_reg0 = ALU_REG0_IS_IMM;
 		end
 		else
@@ -242,7 +226,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			//rx = imm11<<7
 			reg_write_enable = 1;
 			imm = {code_word[10:0], 7'd0};
-			alu_operation = `ALU_MODULE_REF.ALU_OP_REG0;
+			alu_operation = ALU_OP_REG0;
 			select_alu_reg0 = ALU_REG0_IS_IMM;
 		end
 		else
@@ -257,7 +241,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 		begin
 			//ry[imm8] = rx
 			mem_write = 1;
-			alu_operation = `ALU_MODULE_REF.ALU_OP_ADD;
+			alu_operation = ALU_OP_ADD;
 			select_alu_reg0 = ALU_REG0_IS_IMM;
 			select_alu_reg1 = ALU_REG1_IS_REGISTER;
 		end
@@ -265,7 +249,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 		if(code_word_top==OP_IF)
 		begin
 			//if(rx op) goto ip+addr
-			alu_operation = `ALU_MODULE_REF.ALU_OP_ADD;
+			alu_operation = ALU_OP_ADD;
 			select_alu_reg0 = ALU_REG0_IS_IMM;
 			select_alu_reg1 = ALU_REG1_IS_IP;
 			
@@ -296,7 +280,7 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 			mem_write_ip_plus_one = 1;
 			imm = 0;
 			
-			alu_operation = `ALU_MODULE_REF.ALU_OP_ADD;
+			alu_operation = ALU_OP_ADD;
 			reg_read_addr1 = 7;//r7==sp
 			select_alu_reg0 = ALU_REG0_IS_IMM;
 			select_alu_reg1 = ALU_REG1_IS_REGISTER;
