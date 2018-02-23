@@ -49,7 +49,13 @@ module processor_tb;
 		$fwrite(f,"registers\n");
 		for (i = 0; i < 8; i = i +1)
 			$fwrite(f,"r%0d = %h\n", i, processor18.registers.regs[i]);
+
+`ifdef STAGGED_PROCESSOR
+		$fwrite(f,"ip = %h\n", processor18.ip_stage3);
+`else
 		$fwrite(f,"ip = %h\n", processor18.ip);
+`endif
+
 		$fwrite(f,"memory\n");
 		for (i = 0; i < MEM_SIZE; i = i +1)
 			$fwrite(f,"%h\n", data_memory.mem[i]);
@@ -166,8 +172,13 @@ module processor_tb;
 		.clock(clock),
 		.addr(program_memory_addr),
 		.dout(program_memory_out_data));
-		
-	processor #(.ADDR_SIZE(WORD_SIZE), .WORD_SIZE(WORD_SIZE))
+
+`ifdef STAGGED_PROCESSOR		
+	processor_staged
+`else
+	processor 
+`endif
+		#(.ADDR_SIZE(WORD_SIZE), .WORD_SIZE(WORD_SIZE))
 		processor18(
 		.clock(clock),
 		.reset(processor_reset),

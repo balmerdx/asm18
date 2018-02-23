@@ -1,12 +1,12 @@
 module regfile #(parameter integer WORD_SIZE = 18, parameter integer REG_COUNT = 8)
 	(input wire clock,
 	input wire reset,
-	input wire [3:0] read_addr0,
+	input wire [2:0] read_addr0,
 	output wire [(WORD_SIZE-1):0] read_data0,
-	input wire [3:0] read_addr1,
+	input wire [2:0] read_addr1,
 	output wire [(WORD_SIZE-1):0] read_data1,
 	input wire write_enable,
-	input wire [3:0] write_addr,
+	input wire [2:0] write_addr,
 	input wire [(WORD_SIZE-1):0] write_data
 	);
 	//Два порта на чтение и один на запись

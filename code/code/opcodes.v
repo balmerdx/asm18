@@ -8,7 +8,7 @@ typedef enum logic [3:0] {
 	OP_ALU = 4'h6, //rx = rx alu_op ry
 	OP_MUL_SHIFT = 4'h7, // rx = (rx*ry) >> imm
 	OP_CALL_IMM14 = 4'h8, // call imm14
-	OP_RETURN = 4'h9, // ip = sp[imm8]
+	OP_RETURN = 4'h9, // ip = ry[imm8]
 	OP_WAIT = 4'hA
 } OPCODES;
 

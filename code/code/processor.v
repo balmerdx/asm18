@@ -142,12 +142,9 @@ module processor #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE
 	assign code_addr = ip;
 	
 	
-	wire [3:0] code_word_top;
-	assign code_word_top = code_word[17:14];
-	wire [2:0] code_rx;
-	assign code_rx = code_word[13:11];//r0..r7
-	wire [2:0] code_ry;
-	assign code_ry = code_word[10:8];
+	wire [3:0] code_word_top = code_word[17:14];
+	wire [2:0] code_rx = code_word[13:11];//r0..r7
+	wire [2:0] code_ry = code_word[10:8];
 	
 	//see if(code_word_top==7)
 	assign mulxx_shift = code_word[4:0];

@@ -33,6 +33,7 @@ currentState = join(intermediateDir, "current.state")
 
 runOnHardware = False
 alltests = False
+compileStagged = True
 
 if sys.platform=="linux":
 	assemblerExecutable = abspath("../AsmProcessor18/qt/AsmProcessor18-Debug/AsmProcessor18")
@@ -42,12 +43,22 @@ else:
 sourceProcessor = [
 	"ram.v",
 	"regfile.v",
-	"processor.v",
 	"opcodes.v",
 	"alu.v",
 	"alu_op.v",
 	"if_control.v",
 	"mulxx.v",
+	]
+
+sourceProcessor0 = [
+	"processor.v",
+	]
+
+sourceProcessorStage = [
+	"processor_staged.v",
+	"processor_stage1.v",
+	"processor_stage2.v",
+	"processor_stage3.v",
 	]
 
 sourceTb = ["testbench/processor_tb.v"]
@@ -70,13 +81,22 @@ def buildVerilog(generateVcd=False):
 	
 	if generateVcd:
 		command.append("-DOUT_VCD")
+	if compileStagged:
+		command.append("-DSTAGGED_PROCESSOR")
 
 	for source in sourceProcessor:
 		command.append(join("code", source))
+	if compileStagged:
+		for source in sourceProcessorStage:
+			command.append(join("code", source))
+	else:
+		for source in sourceProcessor0:
+			command.append(join("code", source))
+
 	for source in sourceTb:
 		command.append(source)
 
-	command.append("-DPROCESSOR_DEBUG_INTERFACE")
+	#command.append("-DPROCESSOR_DEBUG_INTERFACE")
 		
 	print("Build verilog files...")
 	runCommand(command)
