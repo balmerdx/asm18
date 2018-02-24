@@ -19,10 +19,7 @@ module processor_stage3 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 	output wire [2:0] reg_write_addr,
 	output logic [(WORD_SIZE-1):0] reg_write_data,
 	//
-	input logic [(WORD_SIZE-1):0] memory_out,
-	//Условные и безусловные переходы
-	output reg [(ADDR_SIZE-1):0] ip_to_call,
-	output reg call_performed
+	input logic [(WORD_SIZE-1):0] memory_out
 	);
 
 	localparam logic ALU_REG0_IS_REGISTER = 0;
@@ -30,13 +27,11 @@ module processor_stage3 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 
 	wire [3:0] code_word_top = code_word[17:14];
 	wire [2:0] code_rx = code_word[13:11];
-	wire [2:0] if_operation = code_word[10:8];
 	wire [4:0] mulxx_shift = code_word[4:0];
 	assign reg_write_addr =  code_rx;
 
 	logic [(WORD_SIZE-1):0] alu_result;
 	logic [(WORD_SIZE-1):0] mulxx_result;
-	logic if_ok;
 
 	logic [3:0] alu_operation;
 	alu #(.WORD_SIZE(WORD_SIZE))
@@ -45,13 +40,6 @@ module processor_stage3 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 		.r1(alu_data1),
 		.op(alu_operation),
 		.res(alu_result)
-		);
-		
-	if_control #(.WORD_SIZE(WORD_SIZE))
-		if_control0(
-		.r0(alu_data0),
-		.op(if_operation),
-		.if_ok(if_ok)
 		);
 	
 	mulxx #(.WORD_SIZE(WORD_SIZE))
@@ -108,8 +96,6 @@ module processor_stage3 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 
 	always @(posedge clock)
 	begin
-		ip_to_call <= 0;
-		call_performed <= 0;
 	end
 
 endmodule

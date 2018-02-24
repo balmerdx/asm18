@@ -36,7 +36,10 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 	//Интерфейс writeback регистра
 	input wire writeback_reg_write_enable,
 	input wire [2:0] writeback_reg_write_addr,
-	input wire [(WORD_SIZE-1):0] writeback_reg_write_data
+	input wire [(WORD_SIZE-1):0] writeback_reg_write_data,
+	//Условные и безусловные переходы
+	output wire [(ADDR_SIZE-1):0] ip_to_call,
+	output logic call_performed
 	);
 
 	//Пришла команда wait и мы ожидаем много тактов.
@@ -48,15 +51,28 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 	wire [2:0] code_rx = code_word[13:11];
 	wire [2:0] code_ry = code_word[10:8];
 	wire [7:0] imm8 = code_word[7:0];
+	wire [2:0] if_operation = code_word[10:8];
 
 	logic [(WORD_SIZE-1):0] data0;
 	logic [(WORD_SIZE-1):0] data1;
+	logic if_ok;
 
 	wire [(ADDR_SIZE-1):0] data1_plus_imm8 = data1 + {{10{imm8[7]}}, imm8};//add signed imm8
 
 	logic [2:0] reg_read_addr1_wire;
 
 	assign reg_read_addr0 = code_rx;
+	assign ip_to_call = data1_plus_imm8;
+
+	if_control #(.WORD_SIZE(WORD_SIZE))
+		if_control0(
+		.r0(data0),
+		.op(if_operation),
+		.if_ok(if_ok)
+		);
+
+	logic call_performed_logic;
+
 
 	always @(*)
 	begin
@@ -67,6 +83,7 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 		memory_in = data0;
 		memory_addr = data1_plus_imm8;
 		wait_command_received = 0;
+		call_performed = 0;
 		if(no_operation || waiting)
 		begin
 			
@@ -86,7 +103,11 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 				memory_write_enable = 1;
 			end
 			OP_IF : begin //if(rx op) goto ip+imm8
-				data1 = ip;
+				if(if_ok)
+				begin
+					call_performed = 1;
+					data1 = ip;
+				end
 			end
 			OP_ALU : begin //rx = rx alu_op ry
 			end
@@ -117,13 +138,13 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 		end
 		else
 		begin
-			no_operation_out <= no_operation || waiting;
+			no_operation_out <= no_operation || wait_command_received;
 			alu_data0_out <= data0;
 			alu_data1_out <= data1;
 			ip_out <= ip;
 			ip_plus_one_out <= ip_plus_one;
 			data1_plus_imm8_out <= data1_plus_imm8;
-			code_word_out <= no_operation?0:code_word;
+			code_word_out <= code_word;
 
 			if(wait_command_received)
 				waiting <= 1;

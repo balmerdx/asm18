@@ -29,7 +29,7 @@ module processor_stage1 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 	end
 	else
 	begin
-		no_operation_out <= no_operation;
+		no_operation_out <= no_operation || call_performed;
 		if(!no_operation)
 		begin
 			if(call_performed)

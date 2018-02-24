@@ -130,7 +130,10 @@ module processor_staged #(parameter integer ADDR_SIZE = 18, parameter integer WO
 		//Интерфейс writeback регистра
 		.writeback_reg_write_enable(reg_write_enable),
 		.writeback_reg_write_addr(reg_write_addr),
-		.writeback_reg_write_data(reg_write_data)
+		.writeback_reg_write_data(reg_write_data),
+		//Условные и безусловные переходы
+		.ip_to_call(ip_to_call),
+		.call_performed(call_performed)
 		);
 
 	processor_stage3 #(.ADDR_SIZE(ADDR_SIZE), .WORD_SIZE(WORD_SIZE))
@@ -151,10 +154,7 @@ module processor_staged #(parameter integer ADDR_SIZE = 18, parameter integer WO
 		.reg_write_addr(reg_write_addr),
 		.reg_write_data(reg_write_data),
 		//
-		.memory_out(memory_out),
-		//Условные и безусловные переходы
-		.ip_to_call(ip_to_call),
-		.call_performed(call_performed)
+		.memory_out(memory_out)
 	);
 
 
