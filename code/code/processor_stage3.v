@@ -22,18 +22,15 @@ module processor_stage3 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 	input logic [(WORD_SIZE-1):0] memory_out
 	);
 
-	localparam logic ALU_REG0_IS_REGISTER = 0;
-	localparam logic ALU_REG0_IS_IMM = 1;
-
 	wire [3:0] code_word_top = code_word[17:14];
 	wire [2:0] code_rx = code_word[13:11];
 	wire [4:0] mulxx_shift = code_word[4:0];
+	wire [3:0] alu_operation = code_word[3:0];
 	assign reg_write_addr =  code_rx;
 
 	logic [(WORD_SIZE-1):0] alu_result;
 	logic [(WORD_SIZE-1):0] mulxx_result;
 
-	logic [3:0] alu_operation;
 	alu #(.WORD_SIZE(WORD_SIZE))
 		alu0(
 		.r0(alu_data0),
@@ -52,7 +49,6 @@ module processor_stage3 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 
 	always @(*)
 	begin
-		alu_operation = ALU_OP_ADD;
 		reg_write_data = data1_plus_imm8;
 		reg_write_enable = 0;
 		if(!no_operation)
@@ -78,7 +74,6 @@ module processor_stage3 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 			end
 			OP_ALU : begin //rx = rx alu_op ry
 				reg_write_enable = 1;
-				alu_operation = code_word[3:0];
 				reg_write_data = alu_result;
 			end
 			OP_MUL_SHIFT : begin // rx = (rx*ry) >> imm

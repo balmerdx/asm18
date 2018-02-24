@@ -38,7 +38,7 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 	input wire [2:0] writeback_reg_write_addr,
 	input wire [(WORD_SIZE-1):0] writeback_reg_write_data,
 	//Условные и безусловные переходы
-	output wire [(ADDR_SIZE-1):0] ip_to_call,
+	output logic [(ADDR_SIZE-1):0] ip_to_call,
 	output logic call_performed
 	);
 
@@ -62,7 +62,6 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 	logic [2:0] reg_read_addr1_wire;
 
 	assign reg_read_addr0 = code_rx;
-	assign ip_to_call = data1_plus_imm8;
 
 	if_control #(.WORD_SIZE(WORD_SIZE))
 		if_control0(
@@ -71,19 +70,27 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 		.if_ok(if_ok)
 		);
 
-	logic call_performed_logic;
+	logic write_imm14_to_ip;
 
 
 	always @(*)
 	begin
 		reg_read_addr1 = code_ry;
+		
+		if(code_word_top==OP_CALL_IMM14)
+		begin
+			reg_read_addr1 = 7; //sp
+		end
+
 		data0 = (writeback_reg_write_enable && reg_read_addr0==writeback_reg_write_addr)?writeback_reg_write_data:reg_read_data0;
 		data1 = (writeback_reg_write_enable && reg_read_addr1==writeback_reg_write_addr)?writeback_reg_write_data:reg_read_data1;
 		memory_write_enable = 0;
 		memory_in = data0;
-		memory_addr = data1_plus_imm8;
 		wait_command_received = 0;
 		call_performed = 0;
+		write_imm14_to_ip = 0;
+		memory_addr = data1_plus_imm8;
+
 		if(no_operation || waiting)
 		begin
 			
@@ -116,9 +123,10 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 			OP_CALL_IMM14 : begin // call imm14
 				//sp[0] = ip+1;
 				memory_write_enable = 1;
-				reg_read_addr1 = 7; //sp
-				memory_addr = reg_read_data1;
+				memory_addr = data1;
 				memory_in = ip_plus_one;
+				write_imm14_to_ip = 1;
+				call_performed = 1;
 			end
 			OP_RETURN : begin // ip = ry[imm8]
 				
@@ -127,6 +135,11 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 				wait_command_received = 1;
 			end
 		endcase
+
+		if(write_imm14_to_ip)
+			ip_to_call = {4'b0000, code_word[13:0]};
+		else
+			ip_to_call = data1_plus_imm8;
 	end
 
 	always @(posedge clock)

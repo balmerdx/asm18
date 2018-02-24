@@ -17,7 +17,7 @@ module processor_stage1 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 
 	reg [(WORD_SIZE-1):0] ip;
 	wire [(WORD_SIZE-1):0] ip_plus_one;
-	assign ip_plus_one = (call_performed?ip_to_call:ip) + 1'd1;
+	assign ip_plus_one = (call_performed?ip_to_call:(ip+ 1'd1));
 	assign code_addr = ip;
 
 	always @(posedge clock)

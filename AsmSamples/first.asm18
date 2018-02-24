@@ -1,9 +1,11 @@
 r0 = 12
-if(r0>0) goto Label
+r7 = 7
+call Label
 r1 = 0x10
 r2 = 0x20
 Label:
 r3 = 0x30
+r4 = 0x40
 
 //r0 = 24
 //r1 = r0
