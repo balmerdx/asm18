@@ -51,7 +51,7 @@ module processor_tb;
 			$fwrite(f,"r%0d = %h\n", i, processor18.registers.regs[i]);
 
 `ifdef STAGGED_PROCESSOR
-		$fwrite(f,"ip = %h\n", processor18.ip_stage3);
+		$fwrite(f,"ip = %h\n", processor18.ip_stage3-1'd1);
 `else
 		$fwrite(f,"ip = %h\n", processor18.ip);
 `endif
@@ -145,7 +145,8 @@ module processor_tb;
 		//$monitor("in_data=%x, out_data=%x addr=%x", in_data, out_data, program_memory_addr);
 		//$monitor("mem[0]=%x", program_memory.mem[0]);
 		
-		wait(wait_for_continue);
+		//wait(wait_for_continue);
+		#16;
 		
 		//#2 wait_continue_execution = 1;
 		//#2 wait_continue_execution = 0;

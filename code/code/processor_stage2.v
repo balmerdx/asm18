@@ -1,4 +1,6 @@
 //Чтение регистров и памяти.
+//Определение, не нужно ли сделать reset конвееру.
+//В случае инструкции wait делает ожидаение.
 module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WORD_SIZE = 18)
 	(input wire clock,
 	input wire reset,
@@ -6,6 +8,7 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 	//Данные от предыдущей стадии
 	input wire no_operation,
 	input wire [(ADDR_SIZE-1):0] ip,
+	input wire [(ADDR_SIZE-1):0] ip_plus_one,
 	input wire [(ADDR_SIZE-1):0] code_word,
 	
 	//Интерфейс для чтения из памяти и записи в память
@@ -25,8 +28,17 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 	output reg [(WORD_SIZE-1):0] alu_data1_out,
 	output reg [(WORD_SIZE-1):0] code_word_out,
 	output reg [(ADDR_SIZE-1):0] ip_out,
-	output reg [(ADDR_SIZE-1):0] data1_plus_imm8_out
+	output reg [(ADDR_SIZE-1):0] ip_plus_one_out,
+	output reg [(ADDR_SIZE-1):0] data1_plus_imm8_out,
+
+	//Глобальный сигнал, останавливающий все стадии
+	output wire waiting_global
 	);
+
+	//Пришла команда wait и мы ожидаем много тактов.
+	logic waiting;
+	logic wait_command_received;
+	assign waiting_global = waiting;
 
 	wire [3:0] code_word_top = code_word[17:14];
 	wire [2:0] code_rx = code_word[13:11];
@@ -51,7 +63,12 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 		memory_in = reg_read_data0;
 		imm8 = $signed(code_word[7:0]);
 		memory_addr = data1_plus_imm8;
-		if(!no_operation)
+		wait_command_received = 0;
+		if(no_operation || waiting)
+		begin
+			
+		end
+		else
 		case(code_word_top)
 			OP_REG_ADD_IMM8 : begin //rx = ry + imm8
 			end
@@ -77,26 +94,37 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 				memory_write_enable = 1;
 				reg_read_addr1 = 7; //sp
 				memory_addr = reg_read_data1;
-				data1 = ip;
-				imm8 = 1;
-				memory_in = data1_plus_imm8;
+				memory_in = ip_plus_one;
 			end
 			OP_RETURN : begin // ip = ry[imm8]
 				
 			end
 			OP_WAIT : begin 
+				wait_command_received = 1;
 			end
 		endcase
 	end
 
 	always @(posedge clock)
 	begin
-		no_operation_out <= reset?1:no_operation;
-		alu_data0_out <= data0;
-		alu_data1_out <= data1;
-		ip_out <= ip;
-		data1_plus_imm8_out <= data1_plus_imm8;
-		code_word_out <= no_operation?0:code_word;
+		if(reset)
+		begin
+			no_operation_out <= 0;
+			waiting <= 0;
+		end
+		else
+		begin
+			no_operation_out <= no_operation || waiting;
+			alu_data0_out <= data0;
+			alu_data1_out <= data1;
+			ip_out <= ip;
+			ip_plus_one_out <= ip_plus_one;
+			data1_plus_imm8_out <= data1_plus_imm8;
+			code_word_out <= no_operation?0:code_word;
+
+			if(wait_command_received)
+				waiting <= 1;
+		end		
 	end
 
 endmodule

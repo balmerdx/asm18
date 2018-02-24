@@ -1,13 +1,18 @@
-r0 = 24
-r1 = r0
-r1 = 76
-mulus(r0, r1, 6)
-
-r1 = -2
-mulss(r0, r1, 0)
-
+r0 = 0xA
+r1 = 0xB
+r2 = 0xC
 wait
-r0 = 0xAA
+
+//r0 = 24
+//r1 = r0
+//r1 = 76
+//mulus(r0, r1, 6)
+
+//r1 = -2
+//mulss(r0, r1, 0)
+
+//wait
+//r0 = 0xAA
 
 //	r7 = 4
 //	r0 = 2

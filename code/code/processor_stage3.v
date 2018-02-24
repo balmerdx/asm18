@@ -13,13 +13,13 @@ module processor_stage3 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 	input wire [(ADDR_SIZE-1):0] data1_plus_imm8,
 	input wire [(ADDR_SIZE-1):0] code_word,
 	input wire [(ADDR_SIZE-1):0] ip,
+	input wire [(ADDR_SIZE-1):0] ip_plus_one,
 	//Интерфейс для записи регистра
 	output logic reg_write_enable,
 	output wire [2:0] reg_write_addr,
 	output logic [(WORD_SIZE-1):0] reg_write_data,
 	//
 	input logic [(WORD_SIZE-1):0] memory_out,
-	output reg wait_for_continue_out,
 	//Условные и безусловные переходы
 	output reg [(WORD_SIZE-1):0] ip_to_call,
 	output reg call_performed
@@ -34,7 +34,6 @@ module processor_stage3 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 	wire [4:0] mulxx_shift = code_word[4:0];
 	assign reg_write_addr =  code_rx;
 
-	logic wait_for_continue;
 	logic [(WORD_SIZE-1):0] alu_result;
 	logic [(WORD_SIZE-1):0] mulxx_result;
 	logic if_ok;
@@ -67,7 +66,7 @@ module processor_stage3 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 	begin
 		alu_operation = ALU_OP_ADD;
 		reg_write_data = data1_plus_imm8;
-		wait_for_continue = 0;
+		reg_write_enable = 0;
 		if(!no_operation)
 		case(code_word_top)
 			OP_REG_ADD_IMM8 : begin //rx = ry + imm8
@@ -101,7 +100,6 @@ module processor_stage3 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 				
 			end
 			OP_WAIT : begin
-				wait_for_continue = 1;
 			end
 		endcase
 	end
@@ -110,14 +108,6 @@ module processor_stage3 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 	begin
 		ip_to_call <= 0;
 		call_performed <= 0;
-		if(reset)
-		begin
-			wait_for_continue_out <= 0;
-		end
-		else
-		begin
-			wait_for_continue_out <= wait_for_continue;
-		end
 	end
 
 endmodule

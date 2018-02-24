@@ -35,22 +35,25 @@ module processor_staged #(parameter integer ADDR_SIZE = 18, parameter integer WO
 `endif
 	);
 	
-	logic wait_logic;
-	assign wait_for_continue = wait_logic;
+	wire waiting_global;
 
 	logic no_operation_stage1;
 	logic no_operation_stage2;
 	logic no_operation_stage3;
 
+	assign wait_for_continue = waiting_global;
+	assign no_operation_stage1 = waiting_global;
+
 	logic [(WORD_SIZE-1):0] ip_to_call;
 	logic call_performed;
 	logic [(WORD_SIZE-1):0] ip_stage2;
-	logic [(WORD_SIZE-1):0] code_word_stage2;
+	logic [(WORD_SIZE-1):0] ip_plus_one_stage2;
 
 	logic [(WORD_SIZE-1):0] alu_data0_stage3;
 	logic [(WORD_SIZE-1):0] alu_data1_stage3;
 	logic [(WORD_SIZE-1):0] code_word_stage3;
 	logic [(ADDR_SIZE-1):0] ip_stage3;
+	logic [(ADDR_SIZE-1):0] ip_plus_one_stage3;
 	logic [(ADDR_SIZE-1):0] data1_plus_imm8_stage3;
 	
 	logic [2:0] reg_read_addr0;
@@ -82,14 +85,13 @@ module processor_staged #(parameter integer ADDR_SIZE = 18, parameter integer WO
 		.no_operation(no_operation_stage1),
 		//Интерфейс для чтения программы
 		.code_addr(code_addr),
-		.code_word(code_word),
 		//Условные и безусловные переходы
 		.ip_to_call(ip_to_call),
 		.call_performed(call_performed),
 		//Данные для следующей стадии
 		.no_operation_out(no_operation_stage2),
 		.ip_out(ip_stage2),
-		.code_word_out(code_word_stage2)
+		.ip_plus_one_out(ip_plus_one_stage2)
 		);
 
 	processor_stage2 #(.ADDR_SIZE(ADDR_SIZE), .WORD_SIZE(WORD_SIZE))
@@ -100,7 +102,8 @@ module processor_staged #(parameter integer ADDR_SIZE = 18, parameter integer WO
 		//Данные от предыдущей стадии
 		.no_operation(no_operation_stage2),
 		.ip(ip_stage2),
-		.code_word(code_word_stage2),
+		.ip_plus_one(ip_plus_one_stage2),
+		.code_word(code_word),
 	
 		//Интерфейс для чтения из памяти и записи в память
 		.memory_addr(memory_addr),
@@ -119,7 +122,11 @@ module processor_staged #(parameter integer ADDR_SIZE = 18, parameter integer WO
 		.alu_data1_out(alu_data1_stage3),
 		.code_word_out(code_word_stage3),
 		.ip_out(ip_stage3),
-		.data1_plus_imm8_out(data1_plus_imm8_stage3)
+		.ip_plus_one_out(ip_plus_one_stage3),
+		.data1_plus_imm8_out(data1_plus_imm8_stage3),
+
+		//Глобальный сигнал, останавливающий все стадии
+		.waiting_global(waiting_global)
 		);
 
 	processor_stage3 #(.ADDR_SIZE(ADDR_SIZE), .WORD_SIZE(WORD_SIZE))
@@ -133,6 +140,7 @@ module processor_staged #(parameter integer ADDR_SIZE = 18, parameter integer WO
 		.data1_plus_imm8(data1_plus_imm8_stage3),
 		.code_word(code_word_stage3),
 		.ip(ip_stage3),
+		.ip_plus_one(ip_plus_one_stage3),
 
 		//Интерфейс для записи регистра
 		.reg_write_enable(reg_write_enable),
@@ -140,17 +148,17 @@ module processor_staged #(parameter integer ADDR_SIZE = 18, parameter integer WO
 		.reg_write_data(reg_write_data),
 		//
 		.memory_out(memory_out),
-		.wait_for_continue_out(wait_logic),
 		//Условные и безусловные переходы
 		.ip_to_call(ip_to_call),
 		.call_performed(call_performed)
 	);
 
 
+/*	
 `ifdef PROCESSOR_DEBUG_INTERFACE
 	assign debug_data_out = debug_reg_addr[3]?ip_stage3:reg_read_data1;
 `endif
-/*	
+
 	always @(*)
 	begin
 `ifdef PROCESSOR_DEBUG_INTERFACE
@@ -161,7 +169,7 @@ module processor_staged #(parameter integer ADDR_SIZE = 18, parameter integer WO
 		end
 `endif
 	end
-*/	
+
 	always @(posedge clock)
 	if(reset)
 	begin
@@ -180,5 +188,6 @@ module processor_staged #(parameter integer ADDR_SIZE = 18, parameter integer WO
 		begin
 		end
 	end
+*/	
 endmodule
 
