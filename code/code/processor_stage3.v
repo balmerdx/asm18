@@ -82,6 +82,7 @@ module processor_stage3 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 				reg_write_data = alu_result;
 			end
 			OP_MUL_SHIFT : begin // rx = (rx*ry) >> imm
+				reg_write_enable = 1;
 				reg_write_data = mulxx_result;
 			end
 			OP_CALL_IMM14 : begin // call imm14
