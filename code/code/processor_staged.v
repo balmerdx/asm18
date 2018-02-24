@@ -126,7 +126,11 @@ module processor_staged #(parameter integer ADDR_SIZE = 18, parameter integer WO
 		.data1_plus_imm8_out(data1_plus_imm8_stage3),
 
 		//Глобальный сигнал, останавливающий все стадии
-		.waiting_global(waiting_global)
+		.waiting_global(waiting_global),
+		//Интерфейс writeback регистра
+		.writeback_reg_write_enable(reg_write_enable),
+		.writeback_reg_write_addr(reg_write_addr),
+		.writeback_reg_write_data(reg_write_data)
 		);
 
 	processor_stage3 #(.ADDR_SIZE(ADDR_SIZE), .WORD_SIZE(WORD_SIZE))

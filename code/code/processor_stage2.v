@@ -32,7 +32,11 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 	output reg [(ADDR_SIZE-1):0] data1_plus_imm8_out,
 
 	//Глобальный сигнал, останавливающий все стадии
-	output wire waiting_global
+	output wire waiting_global,
+	//Интерфейс writeback регистра
+	input wire writeback_reg_write_enable,
+	input wire [2:0] writeback_reg_write_addr,
+	input wire [(WORD_SIZE-1):0] writeback_reg_write_data
 	);
 
 	//Пришла команда wait и мы ожидаем много тактов.
@@ -57,8 +61,8 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 	always @(*)
 	begin
 		reg_read_addr1 = code_ry;
-		data0 = reg_read_data0;
-		data1 = reg_read_data1;
+		data0 = (writeback_reg_write_enable && reg_read_addr0==writeback_reg_write_addr)?writeback_reg_write_data:reg_read_data0;
+		data1 = (writeback_reg_write_enable && reg_read_addr1==writeback_reg_write_addr)?writeback_reg_write_data:reg_read_data1;
 		memory_write_enable = 0;
 		memory_in = reg_read_data0;
 		imm8 = $signed(code_word[7:0]);

@@ -10,8 +10,8 @@ module processor_stage3 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 	input wire no_operation,
 	input wire [(WORD_SIZE-1):0] alu_data0,
 	input wire [(WORD_SIZE-1):0] alu_data1,
-	input wire [(ADDR_SIZE-1):0] data1_plus_imm8,
-	input wire [(ADDR_SIZE-1):0] code_word,
+	input wire [(WORD_SIZE-1):0] data1_plus_imm8,
+	input wire [(WORD_SIZE-1):0] code_word,
 	input wire [(ADDR_SIZE-1):0] ip,
 	input wire [(ADDR_SIZE-1):0] ip_plus_one,
 	//Интерфейс для записи регистра
@@ -21,7 +21,7 @@ module processor_stage3 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 	//
 	input logic [(WORD_SIZE-1):0] memory_out,
 	//Условные и безусловные переходы
-	output reg [(WORD_SIZE-1):0] ip_to_call,
+	output reg [(ADDR_SIZE-1):0] ip_to_call,
 	output reg call_performed
 	);
 
