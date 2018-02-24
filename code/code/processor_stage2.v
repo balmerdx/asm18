@@ -47,7 +47,7 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 	wire [3:0] code_word_top = code_word[17:14];
 	wire [2:0] code_rx = code_word[13:11];
 	wire [2:0] code_ry = code_word[10:8];
-	logic [7:0] imm8 = code_word[7:0];
+	wire [7:0] imm8 = code_word[7:0];
 
 	logic [(WORD_SIZE-1):0] data0;
 	logic [(WORD_SIZE-1):0] data1;
@@ -64,7 +64,7 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 		data0 = (writeback_reg_write_enable && reg_read_addr0==writeback_reg_write_addr)?writeback_reg_write_data:reg_read_data0;
 		data1 = (writeback_reg_write_enable && reg_read_addr1==writeback_reg_write_addr)?writeback_reg_write_data:reg_read_data1;
 		memory_write_enable = 0;
-		memory_in = reg_read_data0;
+		memory_in = data0;
 		memory_addr = data1_plus_imm8;
 		wait_command_received = 0;
 		if(no_operation || waiting)

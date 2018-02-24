@@ -89,6 +89,8 @@ module processor_stage3 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 			OP_IF : begin //if(rx op) goto ip+imm8
 			end
 			OP_ALU : begin //rx = rx alu_op ry
+				reg_write_enable = 1;
+				alu_operation = code_word[3:0];
 				reg_write_data = alu_result;
 			end
 			OP_MUL_SHIFT : begin // rx = (rx*ry) >> imm
