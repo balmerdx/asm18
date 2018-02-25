@@ -36,9 +36,11 @@ module processor_staged #(parameter integer ADDR_SIZE = 18, parameter integer WO
 	);
 	
 	wire waiting_global;
+	logic return_performed;
 
 	logic no_operation_stage1;
-	logic no_operation_stage2;
+	logic no_operation_stage1_out;
+	wire no_operation_stage2 = no_operation_stage1_out || return_performed;
 	logic no_operation_stage3;
 
 	assign wait_for_continue = waiting_global;
@@ -86,8 +88,10 @@ module processor_staged #(parameter integer ADDR_SIZE = 18, parameter integer WO
 		//Условные и безусловные переходы
 		.ip_to_call(ip_to_call),
 		.call_performed(call_performed),
+		.ip_to_return(memory_out),
+		.return_performed(return_performed),
 		//Данные для следующей стадии
-		.no_operation_out(no_operation_stage2),
+		.no_operation_out(no_operation_stage1_out),
 		.ip_out(ip_stage2),
 		.ip_plus_one_out(ip_plus_one_stage2)
 		);
@@ -129,7 +133,8 @@ module processor_staged #(parameter integer ADDR_SIZE = 18, parameter integer WO
 		.writeback_reg_write_data(reg_write_data),
 		//Условные и безусловные переходы
 		.ip_to_call(ip_to_call),
-		.call_performed(call_performed)
+		.call_performed(call_performed),
+		.return_performed(return_performed)
 		);
 
 	processor_stage3 #(.ADDR_SIZE(ADDR_SIZE), .WORD_SIZE(WORD_SIZE))

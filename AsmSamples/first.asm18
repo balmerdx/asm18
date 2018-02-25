@@ -1,5 +1,5 @@
-r0 = 12
-r7 = 7
+r0 = 0x30
+sp = 7
 call Label
 r1 = 0x10
 r2 = 0x20
@@ -7,6 +7,7 @@ wait
 Label:
 r3 = 0x30
 r4 = 0x40
+return
 
 //r0 = 24
 //r1 = r0

@@ -9,6 +9,8 @@ module processor_stage1 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 	//Условные и безусловные переходы
 	input wire [(WORD_SIZE-1):0] ip_to_call,
 	input wire call_performed,
+	input wire [(WORD_SIZE-1):0] ip_to_return,
+	input wire return_performed,
 	//Данные для следующей стадии
 	output reg no_operation_out,
 	output reg [(ADDR_SIZE-1):0] ip_out,
@@ -29,9 +31,12 @@ module processor_stage1 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 	end
 	else
 	begin
-		no_operation_out <= no_operation || call_performed;
+		no_operation_out <= no_operation || call_performed || return_performed;
 		if(!no_operation)
 		begin
+			if(return_performed)
+				ip <= ip_to_return;
+			else
 			if(call_performed)
 				ip <= ip_to_call;
 			else

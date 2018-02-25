@@ -36,8 +36,10 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 	input wire [2:0] writeback_reg_write_addr,
 	input wire [(WORD_SIZE-1):0] writeback_reg_write_data,
 	//Условные и безусловные переходы
+	//Данные для предыдущей стадии
 	output logic [(ADDR_SIZE-1):0] ip_to_call,
-	output logic call_performed
+	output logic call_performed,
+	output reg return_performed //На следующий квант надо вычитать данные для return
 	);
 
 	//Пришла команда wait и мы ожидаем много тактов.
@@ -69,6 +71,7 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 		);
 
 	logic write_imm14_to_ip;
+	logic return_found;
 
 
 	always @(*)
@@ -88,6 +91,7 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 		call_performed = 0;
 		write_imm14_to_ip = 0;
 		memory_addr = data1_plus_imm8;
+		return_found = 0;
 
 		if(no_operation || waiting)
 		begin
@@ -127,7 +131,7 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 				call_performed = 1;
 			end
 			OP_RETURN : begin // ip = ry[imm8]
-				
+				return_found = 1;
 			end
 			OP_WAIT : begin 
 				wait_command_received = 1;
@@ -146,6 +150,7 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 		begin
 			no_operation_out <= 0;
 			waiting <= 0;
+			return_performed <= 0;
 		end
 		else
 		begin
@@ -154,6 +159,7 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 			alu_data1_out <= data1;
 			data1_plus_imm8_out <= data1_plus_imm8;
 			code_word_out <= code_word;
+			return_performed <= return_found;
 
 			if(wait_command_received)
 				waiting <= 1;

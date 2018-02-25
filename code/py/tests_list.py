@@ -11,7 +11,7 @@ tests_list = [
 "asm_tests/if.asm18",
 "asm_tests/if1.asm18",
 "asm_tests/mul.asm18",
-#"asm_tests/call.asm18",
+"asm_tests/call.asm18",
 ]
 
 speed_tests_list = [
