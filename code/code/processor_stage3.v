@@ -12,8 +12,6 @@ module processor_stage3 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 	input wire [(WORD_SIZE-1):0] alu_data1,
 	input wire [(WORD_SIZE-1):0] data1_plus_imm8,
 	input wire [(WORD_SIZE-1):0] code_word,
-	input wire [(ADDR_SIZE-1):0] ip,
-	input wire [(ADDR_SIZE-1):0] ip_plus_one,
 	//Интерфейс для записи регистра
 	output logic reg_write_enable,
 	output wire [2:0] reg_write_addr,

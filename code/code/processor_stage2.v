@@ -27,8 +27,6 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 	output reg [(WORD_SIZE-1):0] alu_data0_out,
 	output reg [(WORD_SIZE-1):0] alu_data1_out,
 	output reg [(WORD_SIZE-1):0] code_word_out,
-	output reg [(ADDR_SIZE-1):0] ip_out,
-	output reg [(ADDR_SIZE-1):0] ip_plus_one_out,
 	output reg [(ADDR_SIZE-1):0] data1_plus_imm8_out,
 
 	//Глобальный сигнал, останавливающий все стадии
@@ -154,8 +152,6 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 			no_operation_out <= no_operation || wait_command_received;
 			alu_data0_out <= data0;
 			alu_data1_out <= data1;
-			ip_out <= ip;
-			ip_plus_one_out <= ip_plus_one;
 			data1_plus_imm8_out <= data1_plus_imm8;
 			code_word_out <= code_word;
 

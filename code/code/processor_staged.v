@@ -52,8 +52,6 @@ module processor_staged #(parameter integer ADDR_SIZE = 18, parameter integer WO
 	logic [(WORD_SIZE-1):0] alu_data0_stage3;
 	logic [(WORD_SIZE-1):0] alu_data1_stage3;
 	logic [(WORD_SIZE-1):0] code_word_stage3;
-	logic [(ADDR_SIZE-1):0] ip_stage3;
-	logic [(ADDR_SIZE-1):0] ip_plus_one_stage3;
 	logic [(ADDR_SIZE-1):0] data1_plus_imm8_stage3;
 	
 	logic [2:0] reg_read_addr0;
@@ -121,8 +119,6 @@ module processor_staged #(parameter integer ADDR_SIZE = 18, parameter integer WO
 		.alu_data0_out(alu_data0_stage3),
 		.alu_data1_out(alu_data1_stage3),
 		.code_word_out(code_word_stage3),
-		.ip_out(ip_stage3),
-		.ip_plus_one_out(ip_plus_one_stage3),
 		.data1_plus_imm8_out(data1_plus_imm8_stage3),
 
 		//Глобальный сигнал, останавливающий все стадии
@@ -146,8 +142,6 @@ module processor_staged #(parameter integer ADDR_SIZE = 18, parameter integer WO
 		.alu_data1(alu_data1_stage3),
 		.data1_plus_imm8(data1_plus_imm8_stage3),
 		.code_word(code_word_stage3),
-		.ip(ip_stage3),
-		.ip_plus_one(ip_plus_one_stage3),
 
 		//Интерфейс для записи регистра
 		.reg_write_enable(reg_write_enable),
