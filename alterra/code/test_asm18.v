@@ -101,7 +101,9 @@ mem_async  mem1k_code(
 	.q_b(code_read_b)
 );
 
-processor #(.ADDR_SIZE(WORD_SIZE), .WORD_SIZE(WORD_SIZE))
+//processor
+processor_staged
+	#(.ADDR_SIZE(WORD_SIZE), .WORD_SIZE(WORD_SIZE))
 		processor18(
 		.clock(clock_proc),
 		.reset(processor_reset),

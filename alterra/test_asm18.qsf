@@ -85,6 +85,10 @@ set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS ON
 set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
 set_global_assignment -name VERILOG_MACRO "PROCESSOR_DEBUG_INTERFACE=<None>"
 set_global_assignment -name VERILOG_MACRO "QUARTUS=<None>"
+set_global_assignment -name VERILOG_FILE ../code/code/processor_staged.v
+set_global_assignment -name VERILOG_FILE ../code/code/processor_stage3.v
+set_global_assignment -name VERILOG_FILE ../code/code/processor_stage2.v
+set_global_assignment -name VERILOG_FILE ../code/code/processor_stage1.v
 set_global_assignment -name VERILOG_FILE ../code/code/alu_op.v
 set_global_assignment -name VERILOG_FILE ../code/code/opcodes.v
 set_global_assignment -name VERILOG_FILE ../code/code/regfile.v
