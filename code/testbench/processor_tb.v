@@ -100,11 +100,19 @@ module processor_tb;
 
 		debug_reg_addr = 8;
 		#2;
+`ifdef STAGGED_PROCESSOR
+		if(debug_data_out != processor18.ip_stage2-1'd1)
+		begin
+			$display("ip not equal. ip=%h ipd=%h", processor18.ip_stage2-1'd1, debug_data_out);
+			$finish(1);
+		end
+`else
 		if(debug_data_out != processor18.ip)
 		begin
 			$display("ip not equal. ip=%h ipd=%h", processor18.ip, debug_data_out);
 			$finish(1);
 		end
+`endif
 		debug_get_param = 0;
 		
 		$display("Check debug interface completed.");

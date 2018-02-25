@@ -135,6 +135,12 @@ module processor_staged #(parameter integer ADDR_SIZE = 18, parameter integer WO
 		.ip_to_call(ip_to_call),
 		.call_performed(call_performed),
 		.return_performed(return_performed)
+`ifdef PROCESSOR_DEBUG_INTERFACE
+		,
+		.debug_get_param(debug_get_param),
+		.debug_reg_addr(debug_reg_addr),
+		.debug_data_out(debug_data_out)
+`endif//PROCESSOR_DEBUG_INTERFACE
 		);
 
 	processor_stage3 #(.ADDR_SIZE(ADDR_SIZE), .WORD_SIZE(WORD_SIZE))
@@ -156,41 +162,5 @@ module processor_staged #(parameter integer ADDR_SIZE = 18, parameter integer WO
 		.memory_out(memory_out)
 	);
 
-
-/*	
-`ifdef PROCESSOR_DEBUG_INTERFACE
-	assign debug_data_out = debug_reg_addr[3]?ip_stage3:reg_read_data1;
-`endif
-
-	always @(*)
-	begin
-`ifdef PROCESSOR_DEBUG_INTERFACE
-		if(debug_get_param)
-		begin
-			select_alu_reg1 = debug_reg_addr[3]?ALU_REG1_IS_IP:ALU_REG1_IS_REGISTER;
-			reg_read_addr1 = debug_reg_addr[2:0];
-		end
-`endif
-	end
-
-	always @(posedge clock)
-	if(reset)
-	begin
-	end
-	else
-	begin
-
-		if(wait_logic
-`ifdef PROCESSOR_DEBUG_INTERFACE
-			|| debug_get_param
-`endif
-		)
-		begin
-		end
-		else
-		begin
-		end
-	end
-*/	
 endmodule
 

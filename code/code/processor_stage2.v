@@ -40,6 +40,16 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 	output logic [(ADDR_SIZE-1):0] ip_to_call,
 	output logic call_performed,
 	output reg return_performed //На следующий квант надо вычитать данные для return
+`ifdef PROCESSOR_DEBUG_INTERFACE
+	,
+	//debug_get_param = 1 - processor stopped and get data from internal registers
+	input wire debug_get_param,
+	//debug_reg_addr = 0 r0
+	//debug_reg_addr = 7 r7
+	//debug_reg_addr = 8 ip
+	input wire [3:0] debug_reg_addr,
+	output wire [(WORD_SIZE-1):0] debug_data_out
+`endif
 	);
 
 	//Пришла команда wait и мы ожидаем много тактов.
@@ -61,7 +71,12 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 
 	logic [2:0] reg_read_addr1_wire;
 
+`ifdef PROCESSOR_DEBUG_INTERFACE
+	assign reg_read_addr0 = debug_get_param? debug_reg_addr[2:0] : code_rx;
+	assign debug_data_out = debug_reg_addr[3] ? ip-1'd1 : reg_read_data0;
+`else
 	assign reg_read_addr0 = code_rx;
+`endif
 
 	if_control #(.WORD_SIZE(WORD_SIZE))
 		if_control0(
@@ -72,7 +87,6 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 
 	logic write_imm14_to_ip;
 	logic return_found;
-
 
 	always @(*)
 	begin

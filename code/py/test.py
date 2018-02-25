@@ -96,7 +96,7 @@ def buildVerilog(generateVcd=False):
 	for source in sourceTb:
 		command.append(source)
 
-	#command.append("-DPROCESSOR_DEBUG_INTERFACE")
+	command.append("-DPROCESSOR_DEBUG_INTERFACE")
 		
 	print("Build verilog files...")
 	runCommand(command)
