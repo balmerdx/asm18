@@ -8,7 +8,6 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 	//Данные от предыдущей стадии
 	input wire no_operation,
 	input wire [(ADDR_SIZE-1):0] ip,
-	input wire [(ADDR_SIZE-1):0] ip_plus_one,
 	input wire [(ADDR_SIZE-1):0] code_word,
 	
 	//Интерфейс для чтения из памяти и записи в память
@@ -140,7 +139,7 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 				//sp[0] = ip+1;
 				memory_write_enable = 1;
 				memory_addr = data1;
-				memory_in = ip_plus_one;
+				memory_in = ip+1'd1;
 				write_imm14_to_ip = 1;
 				call_performed = 1;
 			end

@@ -13,8 +13,7 @@ module processor_stage1 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 	input wire return_performed,
 	//Данные для следующей стадии
 	output reg no_operation_out,
-	output reg [(ADDR_SIZE-1):0] ip_out,
-	output reg [(ADDR_SIZE-1):0] ip_plus_one_out
+	output reg [(ADDR_SIZE-1):0] ip_out
 	);
 
 	reg [(WORD_SIZE-1):0] ip;
@@ -43,7 +42,6 @@ module processor_stage1 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 				ip <= ip_plus_one;
 
 			ip_out <= ip;
-			ip_plus_one_out <= ip_plus_one;
 		end
 	end
 
