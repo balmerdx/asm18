@@ -49,6 +49,7 @@ module processor_staged #(parameter integer ADDR_SIZE = 18, parameter integer WO
 	logic [(WORD_SIZE-1):0] ip_to_call;
 	logic call_performed;
 	logic [(WORD_SIZE-1):0] ip_stage2;
+	logic [(WORD_SIZE-1):0] ip_plus_one_stage2;
 
 	logic [(WORD_SIZE-1):0] alu_data0_stage3;
 	logic [(WORD_SIZE-1):0] alu_data1_stage3;
@@ -91,7 +92,8 @@ module processor_staged #(parameter integer ADDR_SIZE = 18, parameter integer WO
 		.return_performed(return_performed),
 		//Данные для следующей стадии
 		.no_operation_out(no_operation_stage1_out),
-		.ip_out(ip_stage2)
+		.ip_out(ip_stage2),
+		.ip_plus_one_out(ip_plus_one_stage2)
 		);
 
 	processor_stage2 #(.ADDR_SIZE(ADDR_SIZE), .WORD_SIZE(WORD_SIZE))
@@ -102,6 +104,7 @@ module processor_staged #(parameter integer ADDR_SIZE = 18, parameter integer WO
 		//Данные от предыдущей стадии
 		.no_operation(no_operation_stage2),
 		.ip(ip_stage2),
+		.ip_plus_one(ip_plus_one_stage2),
 		.code_word(code_word),
 	
 		//Интерфейс для чтения из памяти и записи в память
