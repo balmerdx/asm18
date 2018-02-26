@@ -68,6 +68,7 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 	logic if_ok;
 
 	wire [(ADDR_SIZE-1):0] data1_plus_imm8 = data1 + {{10{imm8[7]}}, imm8};//add signed imm8
+	wire [(ADDR_SIZE-1):0] ip_plus_imm8 = ip + {{10{imm8[7]}}, imm8};
 
 	logic [2:0] reg_read_addr1_wire;
 
@@ -129,7 +130,6 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 				if(if_ok)
 				begin
 					call_performed = 1;
-					data1 = ip;
 				end
 			end
 			OP_ALU : begin //rx = rx alu_op ry
@@ -155,7 +155,7 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 		if(write_imm14_to_ip)
 			ip_to_call = {4'b0000, code_word[13:0]};
 		else
-			ip_to_call = data1_plus_imm8;
+			ip_to_call = ip_plus_imm8;
 	end
 
 	always @(posedge clock)
