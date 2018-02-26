@@ -52,6 +52,9 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 `endif
 	);
 
+	reg [(WORD_SIZE-1):0] ip_reg;
+	reg [(WORD_SIZE-1):0] ip_plus_one_reg;
+	
 	//Пришла команда wait и мы ожидаем много тактов.
 	logic waiting;
 	logic wait_command_received;
@@ -68,13 +71,13 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 	logic if_ok;
 
 	wire [(ADDR_SIZE-1):0] data1_plus_imm8 = data1 + {{10{imm8[7]}}, imm8};//add signed imm8
-	wire [(ADDR_SIZE-1):0] ip_plus_imm8 = ip + {{10{imm8[7]}}, imm8};
+	wire [(ADDR_SIZE-1):0] ip_plus_imm8 = ip_reg + {{10{imm8[7]}}, imm8};
 
 	logic [2:0] reg_read_addr1_wire;
 
 `ifdef PROCESSOR_DEBUG_INTERFACE
 	assign reg_read_addr0 = debug_get_param? debug_reg_addr[2:0] : code_rx;
-	assign debug_data_out = debug_reg_addr[3] ? ip-1'd1 : reg_read_data0;
+	assign debug_data_out = debug_reg_addr[3] ? ip_reg-1'd1 : reg_read_data0;
 `else
 	assign reg_read_addr0 = code_rx;
 `endif
@@ -140,7 +143,7 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 				//sp[0] = ip+1;
 				memory_write_enable = 1;
 				memory_addr = data1;
-				memory_in = ip_plus_one;
+				memory_in = ip_plus_one_reg;
 				write_imm14_to_ip = 1;
 				call_performed = 1;
 			end
@@ -175,6 +178,13 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 			code_word_out <= code_word;
 			return_performed <= return_found;
 
+			//Данные с предыдущей стадии
+			if(!(waiting || no_operation))
+			begin
+				ip_reg <= ip;
+				ip_plus_one_reg <= ip_plus_one;
+			end
+			
 			if(wait_command_received)
 				waiting <= 1;
 		end		
