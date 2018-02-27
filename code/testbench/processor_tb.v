@@ -52,7 +52,7 @@ module processor_tb;
 
 `ifdef STAGGED_PROCESSOR
 		//Предполагаем, что остановились на wait инструкции
-		$fwrite(f,"ip = %h\n", processor18.processor_stage2_m.ip_reg-1'd1);
+		$fwrite(f,"ip = %h\n", processor18.processor_stage2_m.ip_reg);
 `else
 		$fwrite(f,"ip = %h\n", processor18.ip);
 `endif
@@ -101,9 +101,9 @@ module processor_tb;
 		debug_reg_addr = 8;
 		#2;
 `ifdef STAGGED_PROCESSOR
-		if(debug_data_out !=processor18.processor_stage2_m.ip_reg-1'd1)
+		if(debug_data_out !=processor18.processor_stage2_m.ip_reg)
 		begin
-			$display("ip not equal. ip=%h ipd=%h", processor18.processor_stage2_m.ip_reg-1'd1, debug_data_out);
+			$display("ip not equal. ip=%h ipd=%h", processor18.processor_stage2_m.ip_reg, debug_data_out);
 			$finish(1);
 		end
 `else

@@ -77,7 +77,7 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 
 `ifdef PROCESSOR_DEBUG_INTERFACE
 	assign reg_read_addr0 = debug_get_param? debug_reg_addr[2:0] : code_rx;
-	assign debug_data_out = debug_reg_addr[3] ? ip_reg-1'd1 : reg_read_data0;
+	assign debug_data_out = debug_reg_addr[3] ? ip_reg : reg_read_data0;
 `else
 	assign reg_read_addr0 = code_rx;
 `endif
@@ -179,7 +179,7 @@ module processor_stage2 #(parameter integer ADDR_SIZE = 18, parameter integer WO
 			return_performed <= return_found;
 
 			//Данные с предыдущей стадии
-			if(!(waiting || no_operation))
+			if(!(waiting || wait_command_received))
 			begin
 				ip_reg <= ip;
 				ip_plus_one_reg <= ip_plus_one;
